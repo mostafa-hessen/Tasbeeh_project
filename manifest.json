@@ -1,0 +1,21 @@
+{
+  "name": "مليون استغفار",
+  "short_name": "استغفار",
+  "description": "تحدي المليون استغفار - بوابة الأكابر والذاكرين",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#06060c",
+  "theme_color": "#c9943a",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
