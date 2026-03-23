@@ -1360,11 +1360,29 @@
             db.from("app_settings").select("key, value"),
           ]);
 
-          if (u.data) state.users = u.data;
+          const myId = session?.user?.id;
+          if (u.data) {
+            // Keep local gems if we have pending actions to avoid losing them on load
+            if (myId && state.pendingActions.length > 0) {
+              const localMe = state.users.find((ux) => ux.id === myId);
+              if (localMe) {
+                const serverMe = u.data.find((ux) => ux.id === myId);
+                if (serverMe) serverMe.gems = localMe.gems;
+              }
+            }
+            state.users = u.data;
+          }
           if (c.data) state.challenges = c.data;
           if (p.data) {
             state.progress = {};
             p.data.forEach((item) => (state.progress[item.id] = item.score));
+            // Apply pending actions on top of the fetched database data
+            if (myId) {
+              state.pendingActions.forEach((act) => {
+                const k = myId + "_" + act.cid;
+                state.progress[k] = (state.progress[k] || 0) + act.amount;
+              });
+            }
           }
           if (b.data) state.badges = b.data;
           if (s.data) {
@@ -1386,8 +1404,8 @@
               if (!state.currentUser.is_admin)
                 logQuery = logQuery.eq("user_id", state.currentUser.id);
               const { data: lData } = await logQuery;
-              if (lData)
-                state.logs = lData.map((log) => ({
+              if (lData) {
+                const serverLogs = lData.map((log) => ({
                   ...log,
                   id: log.id,
                   userId: log.user_id,
@@ -1396,6 +1414,10 @@
                   amount: log.amount,
                   date: log.date_text,
                 }));
+                // Keep pending local logs that haven't been synced to the server yet
+                const pendingLogs = state.logs.filter((l) => l.is_pending);
+                state.logs = [...pendingLogs, ...serverLogs];
+              }
 
               save(); // حفظ النسخة الجديدة محلياً
               syncPending(); // محاولة مزامنة أي عمل سابق معلق
@@ -1836,6 +1858,7 @@
         sessCount = 0;
         state.subGoal = v;
         save();
+        autoSaveSess();
         syncTasbih();
       }
       function tapSubha() {
@@ -1859,10 +1882,12 @@
           confirm("هل تريد تصفير العداد الحالي؟ لن يتم حفظه.")
         ) {
           sessCount = 0;
+          autoSaveSess();
           syncTasbih();
           toast("تم التصفير ↺");
         } else if (sessCount > 0 === false) {
           sessCount = 0;
+          autoSaveSess();
           syncTasbih();
         }
       }
@@ -1882,7 +1907,7 @@
         const oldScore = state.progress[k] || 0;
         const newScore = oldScore + amount;
         state.progress[k] = newScore;
-
+        
         const nG = Math.floor(newScore / 500) - Math.floor(oldScore / 500);
         if (nG > 0) state.currentUser.gems = (state.currentUser.gems || 0) + nG;
 
@@ -1905,10 +1930,11 @@
 
         sessCount = 0;
         save();
+        autoSaveSess();
         syncTasbih();
         syncDash();
         toast("تم الحفظ محلياً ✓ (سيتم الرفع لاحقاً)");
-
+          
         // محاولة المزامنة الفورية إذا كان أونلاين
         if (navigator.onLine) syncPending();
       }
@@ -2561,7 +2587,7 @@
 
       /* ─── AUTO-SAVE SESSION ─── */
       function autoSaveSess() {
-        sessionStorage.setItem(
+        localStorage.setItem(
           "_autoSess",
           JSON.stringify({
             count: sessCount,
@@ -2570,7 +2596,7 @@
         );
       }
       function restoreAutoSess() {
-        const d = sessionStorage.getItem("_autoSess");
+        const d = localStorage.getItem("_autoSess");
         if (d) {
           const o = JSON.parse(d);
           sessCount = o.count || 0;
@@ -2665,7 +2691,11 @@
               .update({ gems: state.currentUser.gems })
               .eq("id", state.currentUser.id);
 
-            // تم بنجاح، نحذفه من القائمة
+            // تم بنجاح، نحذفه من القائمة وتحديث حالة السجل
+            const syncedAction = state.pendingActions[0];
+            const logItem = state.logs.find((l) => l.is_pending && l.amount === syncedAction.amount && l.date === syncedAction.dateText);
+            if (logItem) delete logItem.is_pending;
+            
             state.pendingActions.shift();
             save();
           }
