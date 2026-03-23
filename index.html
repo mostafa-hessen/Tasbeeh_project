@@ -1220,6 +1220,15 @@
       </div>
     </div>
 
+    <div id="s-badges" class="screen">
+      <div class="container">
+        <h1 class="logo-main" style="font-size: 2.22rem; margin-bottom: 20px">
+          الأوسمة المتاحة 🎓
+        </h1>
+        <div id="all-badges-list-ui"></div>
+      </div>
+    </div>
+
     <div id="s-settings" class="screen">
       <div class="container">
         <h1 class="logo-main">حسابي</h1>
@@ -1244,6 +1253,9 @@
       </button>
       <button class="nav-tab" id="n-tasbih" onclick="navTo('s-tasbih')">
         <span class="ico">📿</span><span>سبحة</span>
+      </button>
+      <button class="nav-tab" id="n-badges" onclick="navTo('s-badges')">
+        <span class="ico">🎖️</span><span>الأوسمة</span>
       </button>
       <button class="nav-tab" id="n-honor" onclick="navTo('s-honor')">
         <span class="ico">🌟</span><span>الشرف</span>
@@ -1506,6 +1518,7 @@
         if (id === "s-history") syncHistory();
         if (id === "s-honor") syncHonor();
         if (id === "s-settings") syncProfile();
+        if (id === "s-badges") syncBadges();
         syncAdmin();
       }
       function navTo(id) {
@@ -1726,13 +1739,13 @@
           (x) =>
             x.id === state.currentChallengeId &&
             x.participants.includes(state.currentUser.id) &&
-            (x.isActive || state.currentUser.isAdmin),
+            (x.is_active || state.currentUser.is_admin),
         );
         if (!c)
           c = state.challenges.filter(
             (x) =>
               x.participants.includes(state.currentUser.id) &&
-              (x.isActive || state.currentUser.isAdmin),
+              (x.is_active || state.currentUser.is_admin),
           )[0];
         if (c) state.currentChallengeId = c.id;
 
@@ -2290,6 +2303,43 @@
         <h3 style="color:var(--primary-light); font-size:1rem; margin-bottom:10px;">الأوسمة 🏅</h3>
         <div class="badge-row">${renderBadgesHTML(u.id)}</div>
     `;
+      }
+
+      function syncBadges() {
+        const bl = document.getElementById("all-badges-list-ui");
+        if (!bl) return;
+
+        // ترتيب الأوسمة حسب الهدف ومجموع الأعمال
+        const sorted = [...state.badges].sort((a, b) => a.target - b.target);
+        const total = getTotal(state.currentUser.id);
+
+        bl.innerHTML = sorted
+          .map((b) => {
+            const has = total >= b.target;
+            const progress = Math.min(100, (total / b.target) * 100).toFixed(1);
+            return `
+                <div class="card-master" style="border: 1px solid ${has ? "var(--primary)" : "rgba(255,255,255,0.05)"}; background: ${has ? "rgba(201,148,58,0.05)" : "var(--card-bg)"};">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div style="font-size:2.5rem; opacity:${has ? 1 : 0.3}; filter:${has ? "" : "grayscale(1)"};">${b.icon}</div>
+                        <div style="flex:1;">
+                            <div style="font-weight:700; color:${has ? "var(--primary-light)" : "var(--text-muted)"};">${b.name}</div>
+                            <div style="font-size:0.75rem; color:var(--text-dim);">الهدف: ${fmt(b.target)}</div>
+                            ${
+                              !has
+                                ? `
+                                <div style="margin-top:8px; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;">
+                                    <div style="width:${progress}%; height:100%; background:var(--primary); transition:0.5s;"></div>
+                                </div>
+                                <div style="font-size:0.6rem; text-align:left; margin-top:4px; color:var(--text-dim);">اكتمل ${ar(Math.floor(progress))}%</div>
+                            `
+                                : '<div style="font-size:0.7rem; color:var(--accent); margin-top:4px;">✓ تم الحصول عليه بنجاح</div>'
+                            }
+                        </div>
+                    </div>
+                </div>
+            `;
+          })
+          .join("");
       }
 
       async function uploadAvatar(event) {
