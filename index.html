@@ -1,532 +1,2529 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>مليون استغفار - الإدارة والسجلات</title>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap" rel="stylesheet">
-<style>
-/* ─────────────────────────────────────────────────────────────────────────────
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>مليون استغفار - الإدارة والسجلات</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ─────────────────────────────────────────────────────────────────────────────
    DESIGN SYSTEM
    ───────────────────────────────────────────────────────────────────────────── */
-:root {
-    --primary: #c9943a;
-    --primary-light: #f5dfa0;
-    --primary-dark: #6e4c1a;
-    --bg: #06060c;
-    --card-bg: #0e0e1a;
-    --text: #f0e8d0;
-    --text-muted: #a09070;
-    --text-dim: #605040;
-    --accent: #2d9e5f;
-    --danger: #c43a3a;
-    --diamond: #4bc0c8;
-    --fire: #ff6b35;
-    --glow: rgba(201, 148, 58, 0.4);
-    --radius: 28px;
-    --glass: rgba(14, 14, 26, 0.94);
-}
+      :root {
+        --primary: #c9943a;
+        --primary-light: #f5dfa0;
+        --primary-dark: #6e4c1a;
+        --bg: #06060c;
+        --card-bg: #0e0e1a;
+        --text: #f0e8d0;
+        --text-muted: #a09070;
+        --text-dim: #605040;
+        --accent: #2d9e5f;
+        --danger: #c43a3a;
+        --diamond: #4bc0c8;
+        --fire: #ff6b35;
+        --glow: rgba(201, 148, 58, 0.4);
+        --radius: 28px;
+        --glass: rgba(14, 14, 26, 0.94);
+      }
 
-* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-body {
-    font-family: 'Tajawal', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-    line-height: 1.6;
-}
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        font-family: "Tajawal", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+        overflow-x: hidden;
+        line-height: 1.6;
+      }
 
-body::before {
-    content: ''; position: fixed; inset: 0;
-    background: 
-        radial-gradient(ellipse at 50% -10%, rgba(201,148,58,0.2) 0%, transparent 70%),
-        radial-gradient(circle at 100% 100%, rgba(75,192,200,0.08) 0%, transparent 40%);
-    z-index: -1; pointer-events: none;
-}
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background:
+          radial-gradient(
+            ellipse at 50% -10%,
+            rgba(201, 148, 58, 0.2) 0%,
+            transparent 70%
+          ),
+          radial-gradient(
+            circle at 100% 100%,
+            rgba(75, 192, 200, 0.08) 0%,
+            transparent 40%
+          );
+        z-index: -1;
+        pointer-events: none;
+      }
 
-.container { width: 100%; max-width: 500px; margin: 0 auto; }
+      .container {
+        width: 100%;
+        max-width: 500px;
+        margin: 0 auto;
+      }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+      /* ─────────────────────────────────────────────────────────────────────────────
    SCREENS
    ───────────────────────────────────────────────────────────────────────────── */
-.screen { display: none; flex-direction: column; padding: 24px 16px 140px; min-height: 100vh; animation: screenIn 0.5s cubic-bezier(0.19, 1, 0.22, 1); }
-.screen.active { display: flex; }
-@keyframes screenIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+      .screen {
+        display: none;
+        flex-direction: column;
+        padding: 24px 16px 140px;
+        min-height: 100vh;
+        animation: screenIn 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+      }
+      .screen.active {
+        display: flex;
+      }
+      @keyframes screenIn {
+        from {
+          opacity: 0;
+          transform: translateY(15px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+      /* ─────────────────────────────────────────────────────────────────────────────
    COMPONENTS
    ───────────────────────────────────────────────────────────────────────────── */
-.card-master {
-    background: linear-gradient(165deg, var(--card-bg), #1a1a35);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius);
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-    position: relative;
-    overflow: hidden;
-}
+      .card-master {
+        background: linear-gradient(165deg, var(--card-bg), #1a1a35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+      }
 
-.hero-card-v3 {
-    background: linear-gradient(135deg, #12122b, #0e0e1a);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: var(--radius);
-    padding: 24px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 15px 45px rgba(0,0,0,0.8);
-    position: relative;
-}
+      .hero-card-v3 {
+        background: linear-gradient(135deg, #12122b, #0e0e1a);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: var(--radius);
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin-bottom: 24px;
+        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8);
+        position: relative;
+      }
 
-.hero-svg-box { width: 100px; height: 100px; position: relative; flex-shrink: 0; }
-.hero-svg { position: absolute; inset: 0; transform: rotate(-90deg); filter: drop-shadow(0 0 5px var(--glow)); }
-.hero-track { fill: none; stroke: rgba(255,255,255,0.05); stroke-width: 8; }
-.hero-progress { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; stroke-dasharray: 238; stroke-dashoffset: 238; transition: stroke-dashoffset 1s ease-out; }
-.hero-pct-text { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: 800; color: var(--primary-light); }
+      .hero-svg-box {
+        width: 100px;
+        height: 100px;
+        position: relative;
+        flex-shrink: 0;
+      }
+      .hero-svg {
+        position: absolute;
+        inset: 0;
+        transform: rotate(-90deg);
+        filter: drop-shadow(0 0 5px var(--glow));
+      }
+      .hero-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.05);
+        stroke-width: 8;
+      }
+      .hero-progress {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 8;
+        stroke-linecap: round;
+        stroke-dasharray: 238;
+        stroke-dashoffset: 238;
+        transition: stroke-dashoffset 1s ease-out;
+      }
+      .hero-pct-text {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        font-weight: 800;
+        color: var(--primary-light);
+      }
 
-.hero-stat-row { display: flex; justify-content: space-between; align-items: baseline; margin-top: 5px; }
-.hero-stat-lbl { font-size: 0.75rem; color: var(--text-muted); }
-.hero-stat-val { font-family: 'Scheherazade New', serif; font-size: 1.6rem; color: var(--primary); line-height: 1; }
+      .hero-stat-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-top: 5px;
+      }
+      .hero-stat-lbl {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+      }
+      .hero-stat-val {
+        font-family: "Scheherazade New", serif;
+        font-size: 1.6rem;
+        color: var(--primary);
+        line-height: 1;
+      }
 
-.logo-main {
-    font-family: 'Scheherazade New', serif; font-size: 3rem; font-weight: 700;
-    background: linear-gradient(135deg, var(--primary-light), var(--primary), var(--primary-dark));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
+      .logo-main {
+        font-family: "Scheherazade New", serif;
+        font-size: 3rem;
+        font-weight: 700;
+        background: linear-gradient(
+          135deg,
+          var(--primary-light),
+          var(--primary),
+          var(--primary-dark)
+        );
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
 
-.btn-royal { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #000; border: none; border-radius: 20px; padding: 18px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 8px 30px rgba(201, 148, 58, 0.3); }
+      .btn-royal {
+        width: 100%;
+        background: linear-gradient(
+          135deg,
+          var(--primary),
+          var(--primary-dark)
+        );
+        color: #000;
+        border: none;
+        border-radius: 20px;
+        padding: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        box-shadow: 0 8px 30px rgba(201, 148, 58, 0.3);
+      }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+      /* ─────────────────────────────────────────────────────────────────────────────
    LOGS (HISTORY) - USER EXPERIENCE
    ───────────────────────────────────────────────────────────────────────────── */
-.log-row { 
-    background: rgba(255,255,255,0.02); 
-    border-radius: 18px; 
-    padding: 14px 18px; 
-    margin-bottom: 8px; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    border-right: 4px solid var(--primary);
-}
-.log-row.manual { border-right-color: var(--accent); }
-.log-info { display: flex; flex-direction: column; gap: 2px; }
-.log-type { font-size: 0.8rem; font-weight: 700; color: var(--primary); }
-.log-date { font-size: 0.65rem; color: var(--text-dim); }
-.log-amt { font-family: 'Scheherazade New', serif; font-size: 1.4rem; color: var(--text); }
+      .log-row {
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: 18px;
+        padding: 14px 18px;
+        margin-bottom: 8px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-right: 4px solid var(--primary);
+      }
+      .log-row.manual {
+        border-right-color: var(--accent);
+      }
+      .log-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+      .log-type {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--primary);
+      }
+      .log-date {
+        font-size: 0.65rem;
+        color: var(--text-dim);
+      }
+      .log-amt {
+        font-family: "Scheherazade New", serif;
+        font-size: 1.4rem;
+        color: var(--text);
+      }
 
-/* ─────────────────────────────────────────────────────────────────────────────
+      /* ─────────────────────────────────────────────────────────────────────────────
    BEAD CONTROL (AUTO RESET)
    ───────────────────────────────────────────────────────────────────────────── */
-.bead-ring { width: 280px; height: 280px; margin: 20px auto; border-radius: 50%; display: flex; align-items: center; justify-content: center; position: relative; }
-.bead-svg { position: absolute; inset: 0; transform: rotate(-90deg); }
-.bead-track { fill: none; stroke: rgba(255,255,255,0.03); stroke-width: 10; }
-.bead-progress { fill: none; stroke: var(--primary); stroke-width: 10; stroke-linecap: round; stroke-dasharray: 754; stroke-dashoffset: 754; transition: 0.2s linear; }
-.bead-core {
-    width: 200px; height: 200px; border-radius: 50%; border: none; cursor: pointer;
-    background: radial-gradient(circle at 35% 35%, #ffd06b 0%, var(--primary) 45%, #2a1b00 100%);
-    box-shadow: 0 15px 60px rgba(0,0,0,0.8), inset 0 -10px 20px rgba(0,0,0,0.5);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; transition: 0.05s; z-index: 5;
-}
-.bead-core:active { transform: scale(0.92); }
-.bead-lbl { font-family: 'Scheherazade New', serif; font-size: 2.4rem; font-weight: 700; color: #fff; text-shadow: 0 4px 8px rgba(0,0,0,0.5); }
-.bead-pct-label { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 800; color: #fff; opacity: 0.8; }
+      .bead-ring {
+        width: 280px;
+        height: 280px;
+        margin: 20px auto;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+      .bead-svg {
+        position: absolute;
+        inset: 0;
+        transform: rotate(-90deg);
+      }
+      .bead-track {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.03);
+        stroke-width: 10;
+      }
+      .bead-progress {
+        fill: none;
+        stroke: var(--primary);
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-dasharray: 754;
+        stroke-dashoffset: 754;
+        transition: 0.2s linear;
+      }
+      .bead-core {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: radial-gradient(
+          circle at 35% 35%,
+          #ffd06b 0%,
+          var(--primary) 45%,
+          #2a1b00 100%
+        );
+        box-shadow:
+          0 15px 60px rgba(0, 0, 0, 0.8),
+          inset 0 -10px 20px rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        transition: 0.05s;
+        z-index: 5;
+      }
+      .bead-core:active {
+        transform: scale(0.92);
+      }
+      .bead-lbl {
+        font-family: "Scheherazade New", serif;
+        font-size: 2.4rem;
+        font-weight: 700;
+        color: #fff;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      }
+      .bead-pct-label {
+        position: absolute;
+        bottom: 35px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #fff;
+        opacity: 0.8;
+      }
 
-.goal-picker { margin: 20px 0; display:flex; justify-content:center; gap:8px; flex-wrap: wrap; }
-.goal-btn {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: var(--text-muted);
-    padding: 10px 20px;
-    border-radius: 16px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    font-family: inherit;
-}
-.goal-btn:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
-.goal-btn.active {
-    background: var(--primary);
-    color: #000;
-    border-color: var(--primary);
-    box-shadow: 0 8px 20px var(--glow);
-    transform: scale(1.05);
-}
+      .goal-picker {
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .goal-btn {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-muted);
+        padding: 10px 20px;
+        border-radius: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        font-family: inherit;
+      }
+      .goal-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+      }
+      .goal-btn.active {
+        background: var(--primary);
+        color: #000;
+        border-color: var(--primary);
+        box-shadow: 0 8px 20px var(--glow);
+        transform: scale(1.05);
+      }
 
-.ranking-row { background: rgba(255,255,255,0.03); border-radius: 22px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.04); }
-.ranking-row.me { border-color: var(--primary); background: rgba(201,148,58,0.1); }
-.rank-badge { width: 44px; height: 44px; background: rgba(0,0,0,0.3); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-family: 'Scheherazade New', serif; font-size: 1.6rem; color: var(--primary); }
+      .ranking-row {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 22px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.04);
+      }
+      .ranking-row.me {
+        border-color: var(--primary);
+        background: rgba(201, 148, 58, 0.1);
+      }
+      .rank-badge {
+        width: 44px;
+        height: 44px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Scheherazade New", serif;
+        font-size: 1.6rem;
+        color: var(--primary);
+      }
 
-.nav-base { position: fixed; bottom: 20px; left: 20px; right: 20px; height: 76px; background: var(--glass); backdrop-filter: blur(25px); border-radius: 26px; display: flex; justify-content: space-around; align-items: center; border: 1px solid rgba(255,255,255,0.08); z-index: 1000; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
-.nav-tab { color: var(--text-dim); display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; cursor: pointer; border:none; background:none; font-family:inherit; width: 25%; transition: 0.3s; }
-.nav-tab.active { color: var(--primary-light); }
-.nav-tab.active .ico { transform: translateY(-30px); color: var(--primary); font-size: 1.8rem; }
-.nav-tab .ico { font-size: 1.5rem; transition: 0.3s; }
+      .nav-base {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        height: 76px;
+        background: var(--glass);
+        backdrop-filter: blur(25px);
+        border-radius: 26px;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 1000;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+      }
+      .nav-tab {
+        color: var(--text-dim);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 0.75rem;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-family: inherit;
+        width: 25%;
+        transition: 0.3s;
+      }
+      .nav-tab.active {
+        color: var(--primary-light);
+      }
+      .nav-tab.active .ico {
+        transform: translateY(-30px);
+        color: var(--primary);
+        font-size: 1.8rem;
+      }
+      .nav-tab .ico {
+        font-size: 1.5rem;
+        transition: 0.3s;
+      }
 
-.overlay-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.95); backdrop-filter: blur(15px); display: none; align-items: center; justify-content: center; z-index: 5000; padding: 20px; }
-.modal-win { background: var(--card-bg); border-radius: 34px; padding: 35px; width: 100%; max-width: 440px; border: 1px solid var(--primary-dark); text-align: right; }
-.input-field { width: 100%; background: #1a1a2e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; padding: 16px; color: var(--text); font-family: inherit; font-size: 1rem; margin-bottom: 15px; outline: none; text-align: right; }
+      .overlay-mask {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(15px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 5000;
+        padding: 20px;
+      }
+      .modal-win {
+        background: var(--card-bg);
+        border-radius: 34px;
+        padding: 35px;
+        width: 100%;
+        max-width: 440px;
+        border: 1px solid var(--primary-dark);
+        text-align: right;
+      }
+      .input-field {
+        width: 100%;
+        background: #1a1a2e;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 16px;
+        color: var(--text);
+        font-family: inherit;
+        font-size: 1rem;
+        margin-bottom: 15px;
+        outline: none;
+        text-align: right;
+      }
 
-[lang="ar"] { direction: rtl; }
-.hidden { display: none !important; }
-.row-fire { font-size: 1.4rem; filter: drop-shadow(0 0 5px var(--fire)); animation: flicker 2s infinite ease-in-out; }
-@keyframes flicker { 0%, 100% { opacity: 0.8; transform: scale(1); } 50% { opacity: 1; transform: scale(1.15); } }
-</style>
-</head>
-<body>
+      [lang="ar"] {
+        direction: rtl;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .row-fire {
+        font-size: 1.4rem;
+        filter: drop-shadow(0 0 5px var(--fire));
+        animation: flicker 2s infinite ease-in-out;
+      }
+      @keyframes flicker {
+        0%,
+        100% {
+          opacity: 0.8;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.15);
+        }
+      }
 
-<div id="toast" style="position:fixed; top:40px; left:50%; transform:translateX(-50%) translateY(-100px); background:var(--primary); color:#000; padding:12px 24px; border-radius:30px; z-index:9999; font-weight:700; transition:0.5s;"></div>
+      /* BADGES */
+      .badge-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        margin: 15px 0;
+      }
+      .badge-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 10px 14px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        min-width: 80px;
+      }
+      .badge-item.earned {
+        border-color: var(--primary);
+        background: rgba(201, 148, 58, 0.1);
+      }
+      .badge-item.locked {
+        opacity: 0.4;
+        filter: grayscale(1);
+      }
+      .badge-icon {
+        font-size: 1.8rem;
+      }
+      .badge-label {
+        font-size: 0.6rem;
+        color: var(--text-muted);
+        text-align: center;
+      }
 
-<!-- MODALS -->
-<div id="m-manual" class="overlay-mask" onclick="closeModal('m-manual')">
-    <div class="modal-win" onclick="event.stopPropagation()">
+      /* PARTICLES */
+      .particle {
+        position: fixed;
+        pointer-events: none;
+        z-index: 9998;
+        border-radius: 50%;
+        animation: particleFly 1s ease-out forwards;
+      }
+      @keyframes particleFly {
+        0% {
+          opacity: 1;
+          transform: translate(0, 0) scale(1);
+        }
+        100% {
+          opacity: 0;
+          transform: translate(var(--px), var(--py)) scale(0);
+        }
+      }
+
+      /* COUNTDOWN */
+      .countdown-bar {
+        background: rgba(255, 255, 255, 0.04);
+        border-radius: 14px;
+        padding: 10px 16px;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .countdown-val {
+        font-family: "Scheherazade New", serif;
+        font-size: 1rem;
+        color: var(--fire);
+        direction: ltr;
+      }
+
+      /* DAILY MESSAGE */
+      .daily-msg {
+        background: linear-gradient(
+          135deg,
+          rgba(201, 148, 58, 0.15),
+          rgba(201, 148, 58, 0.05)
+        );
+        border: 1px solid rgba(201, 148, 58, 0.2);
+        border-radius: 16px;
+        padding: 14px 18px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .daily-msg .msg-text {
+        font-family: "Scheherazade New", serif;
+        font-size: 1.2rem;
+        color: var(--primary-light);
+      }
+
+      /* SOUND TOGGLE */
+      .sound-toggle {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        background: none;
+        border: none;
+        font-size: 1.2rem;
+        cursor: pointer;
+        opacity: 0.6;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="toast"
+      style="
+        position: fixed;
+        top: 40px;
+        left: 50%;
+        transform: translateX(-50%) translateY(-100px);
+        background: var(--primary);
+        color: #000;
+        padding: 12px 24px;
+        border-radius: 30px;
+        z-index: 9999;
+        font-weight: 700;
+        transition: 0.5s;
+      "
+    ></div>
+
+    <!-- MODALS -->
+    <div id="m-manual" class="overlay-mask" onclick="closeModal('m-manual')">
+      <div class="modal-win" onclick="event.stopPropagation()">
         <div id="manual-step-input">
-            <h3 style="color: var(--primary-light); margin-bottom: 20px;">إضافة رصيد يدوي 💎</h3>
-            <input type="number" id="manual-val" class="input-field" placeholder="أدخل العدد هنا">
-            <button class="btn-royal" onclick="showManualConfirm()">مراجعة الإضافة ✦</button>
+          <h3 style="color: var(--primary-light); margin-bottom: 20px">
+            إضافة رصيد يدوي 💎
+          </h3>
+          <input
+            type="number"
+            id="manual-val"
+            class="input-field"
+            placeholder="أدخل العدد هنا"
+          />
+          <button class="btn-royal" onclick="showManualConfirm()">
+            مراجعة الإضافة
+          </button>
         </div>
-        <div id="manual-step-confirm" class="hidden" style="text-align: center;">
-            <div style="font-size: 4rem; margin-bottom: 15px;">🏁</div>
-            <h3 style="color: var(--primary-light); margin-bottom: 10px;">تأكيد الإنجاز</h3>
-            <p style="font-size: 1rem; color: var(--text); margin-bottom: 20px;">أنت ستضيف <br><span id="confirm-num-display" style="font-size: 2.22rem; font-family:'Scheherazade New', serif; color:var(--primary);">0</span> <br> استغفار. متأكد؟</p>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <button class="btn-royal" onclick="submitManual()">تأكيد✓</button>
-                <button class="btn-royal" style="background:#2a1b1b; color:var(--danger);" onclick="resetManualModal()">تعديل</button>
-            </div>
+        <div id="manual-step-confirm" class="hidden" style="text-align: center">
+          <div style="font-size: 4rem; margin-bottom: 15px">🏁</div>
+          <h3 style="color: var(--primary-light); margin-bottom: 10px">
+            تأكيد الإنجاز
+          </h3>
+          <p style="font-size: 1rem; color: var(--text); margin-bottom: 20px">
+            أنت ستضيف <br /><span
+              id="confirm-num-display"
+              style="
+                font-size: 2.22rem;
+                font-family: &quot;Scheherazade New&quot;, serif;
+                color: var(--primary);
+              "
+              >0</span
+            >
+            <br />
+            استغفار. متأكد؟
+          </p>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px">
+            <button class="btn-royal" onclick="submitManual()">تأكيد✓</button>
+            <button
+              class="btn-royal"
+              style="background: #2a1b1b; color: var(--danger)"
+              onclick="resetManualModal()"
+            >
+              تعديل
+            </button>
+          </div>
         </div>
+      </div>
     </div>
-</div>
 
-<div id="m-edit-user" class="overlay-mask" onclick="closeModal('m-edit-user')">
-    <div class="modal-win" onclick="event.stopPropagation()">
-        <h3 style="color: var(--primary-light); margin-bottom: 15px;">تعديل البيانات 👤</h3>
-        <input type="text" id="edit-u-name" class="input-field" placeholder="الاسم">
-        <input type="text" id="edit-u-pass" class="input-field" placeholder="كلمة السر">
-        <input type="number" id="edit-u-gems" class="input-field" placeholder="الماس">
-        <div id="edit-u-balances" style="margin-top:15px; max-height: 200px; overflow-y: auto;"></div>
-        <button class="btn-royal" style="margin-top:20px;" onclick="saveUserEdit()">حفظ التعديلات ✦</button>
+    <div
+      id="m-edit-user"
+      class="overlay-mask"
+      onclick="closeModal('m-edit-user')"
+    >
+      <div class="modal-win" onclick="event.stopPropagation()">
+        <h3 style="color: var(--primary-light); margin-bottom: 15px">
+          تعديل البيانات 👤
+        </h3>
+        <input
+          type="text"
+          id="edit-u-name"
+          class="input-field"
+          placeholder="الاسم"
+        />
+        <input
+          type="text"
+          id="edit-u-pass"
+          class="input-field"
+          placeholder="كلمة السر"
+        />
+        <input
+          type="number"
+          id="edit-u-gems"
+          class="input-field"
+          placeholder="الماس"
+        />
+        <div
+          id="edit-u-balances"
+          style="margin-top: 15px; max-height: 150px; overflow-y: auto"
+        ></div>
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+          "
+        >
+          <input type="checkbox" id="edit-u-hidden" /> إخفاء هذا العضو من
+          الترتيب العام
+        </label>
+        <button
+          class="btn-royal"
+          style="margin-top: 20px"
+          onclick="saveUserEdit()"
+        >
+          حفظ التعديلات
+        </button>
+      </div>
     </div>
-</div>
 
-<div id="m-custom-goal" class="overlay-mask" onclick="closeModal('m-custom-goal')">
-    <div class="modal-win" onclick="event.stopPropagation()">
-        <h3 style="color: var(--primary-light); margin-bottom: 15px;">هدف الجلسة 🎯</h3>
-        <input type="number" id="custom-goal-val" class="input-field" placeholder="أدخل الرقم المراد">
-        <button class="btn-royal" onclick="applyCustomGoal()">حفظ ✦</button>
+    <div
+      id="m-custom-goal"
+      class="overlay-mask"
+      onclick="closeModal('m-custom-goal')"
+    >
+      <div class="modal-win" onclick="event.stopPropagation()">
+        <h3 style="color: var(--primary-light); margin-bottom: 15px">
+          هدف الجلسة 🎯
+        </h3>
+        <input
+          type="number"
+          id="custom-goal-val"
+          class="input-field"
+          placeholder="أدخل الرقم المراد"
+        />
+        <button class="btn-royal" onclick="applyCustomGoal()">حفظ</button>
+      </div>
     </div>
-</div>
 
-<!-- SCREENS -->
-<div id="s-login" class="screen">
-    <div class="container" style="justify-content: center; min-height: 85vh; display: flex; flex-direction: column;">
-        <div class="card-master" style="text-align: center;">
-            <h1 class="logo-main">مليون استغفار</h1>
-            <p style="color: var(--text-muted); margin-bottom: 30px;">بوابة الأكابر والذاكرين</p>
-            <input type="text" id="login-id" class="input-field" placeholder="اليوزر">
-            <input type="password" id="login-pass" class="input-field" placeholder="كلمة السر">
-            <button class="btn-royal" onclick="handleLogin()">دخول آمن ✦</button>
-        </div>
+    <!-- SCREENS -->
+    <div id="s-login" class="screen">
+      <div
+        class="container"
+        style="
+          justify-content: center;
+          min-height: 85vh;
+          display: flex;
+          flex-direction: column;
+        "
+      >
+        <form
+          class="card-master"
+          style="text-align: center"
+          onsubmit="
+            event.preventDefault();
+            isSignupMode ? handleSignup() : handleLogin();
+          "
+        >
+          <h1 class="logo-main">مليون استغفار</h1>
+          <p style="color: var(--text-muted); margin-bottom: 30px">
+            بوابة الأكابر والذاكرين
+          </p>
+          <input
+            type="text"
+            id="signup-name"
+            name="name"
+            class="input-field hidden"
+            placeholder="الاسم الكامل"
+            autocomplete="name"
+          />
+          <input
+            type="email"
+            id="login-id"
+            name="email"
+            class="input-field"
+            placeholder="البريد الإلكتروني"
+            autocomplete="email"
+            required
+          />
+          <input
+            type="password"
+            id="login-pass"
+            name="password"
+            class="input-field"
+            placeholder="كلمة السر"
+            autocomplete="current-password"
+            required
+          />
+          <button type="submit" class="btn-royal" id="btn-login-action">
+            دخول آمن
+          </button>
+          <button type="submit" class="btn-royal hidden" id="btn-signup-action">
+            إنشاء حساب
+          </button>
+          <p
+            id="toggle-auth-text"
+            class="hidden"
+            style="
+              margin-top: 20px;
+              color: var(--primary);
+              cursor: pointer;
+              font-size: 0.9rem;
+            "
+            onclick="toggleAuthMode()"
+          >
+            ليس لديك حساب؟ سجل الآن
+          </p>
+        </form>
+      </div>
     </div>
-</div>
 
-<div id="s-dash" class="screen">
-    <div class="container">
-        <div id="dash-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;"></div>
-        <div id="dash-chips-area" style="display: flex; overflow-x: auto; gap: 10px; padding-bottom: 15px; scrollbar-width: none;"></div>
+    <div id="s-dash" class="screen">
+      <div class="container">
+        <div
+          id="dash-header"
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 25px;
+          "
+        ></div>
+        <div id="daily-msg-area"></div>
+        <div
+          id="dash-chips-area"
+          style="
+            display: flex;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 15px;
+            scrollbar-width: none;
+          "
+        ></div>
         <div id="hero-card-v3-area"></div>
-        <div style="display: flex; align-items: center; justify-content: space-between; margin: 10px 0 15px;">
-            <h2 style="font-size: 1.1rem; color: var(--primary-light); margin:0;">✦ ترتيب المتنافسين</h2>
-            <span class="row-fire">🔥</span>
+        <div
+          id="rank-title-ui"
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 10px 0 15px;
+          "
+        >
+          <h2 style="font-size: 1.1rem; color: var(--primary-light); margin: 0">
+            ترتيب المتنافسين
+          </h2>
+          <span class="row-fire">🔥</span>
         </div>
         <div id="rankings-area-ui"></div>
+      </div>
     </div>
-</div>
 
-<div id="s-history" class="screen">
-    <div class="container">
-        <h1 class="logo-main" style="font-size: 2.2rem; margin-bottom: 20px;">سجل الأعمال</h1>
+    <div id="s-history" class="screen">
+      <div class="container">
+        <h1 class="logo-main" style="font-size: 2.2rem; margin-bottom: 20px">
+          سجل الأعمال
+        </h1>
         <div id="history-list-ui"></div>
+      </div>
     </div>
-</div>
 
-<div id="s-tasbih" class="screen">
-    <div class="container" style="text-align: center;">
-        <h2 id="t-chal-title-ui" style="color: var(--primary-light); font-size: 1.35rem;">تحدي المليون</h2>
-        
+    <div id="s-honor" class="screen">
+      <div class="container">
+        <h1 class="logo-main" style="font-size: 2.2rem; margin-bottom: 8px">
+          لوحة الشرف
+        </h1>
+        <p style="color: var(--text-muted); margin-bottom: 30px">
+          أعظم الذاكرين وسجلات الخالدين 🏆
+        </p>
+
+        <div
+          class="card-master"
+          style="
+            background: linear-gradient(135deg, #1a1a35, #0a0a20);
+            border: 2px solid var(--primary);
+          "
+        >
+          <div style="text-align: center; margin-bottom: 20px">
+            <div style="font-size: 3rem">🌟</div>
+            <h3 style="color: var(--primary-light)">فرسان الاستغفار</h3>
+          </div>
+          <div id="honor-board-ui"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="s-tasbih" class="screen">
+      <div class="container" style="text-align: center; position: relative">
+        <button
+          class="sound-toggle"
+          id="sound-toggle-btn"
+          onclick="toggleSound()"
+          title="تشغيل/إيقاف الأصوات"
+        >
+          🔊
+        </button>
+        <h2
+          id="t-chal-title-ui"
+          style="color: var(--primary-light); font-size: 1.35rem"
+        >
+          تحدي المليون
+        </h2>
+
         <div class="goal-picker">
-            <button class="goal-btn active" id="g-33" onclick="setG(33)">٣٣</button>
-            <button class="goal-btn" id="g-100" onclick="setG(100)">١٠٠</button>
-            <button class="goal-btn" id="g-1000" onclick="setG(1000)">١٠٠٠</button>
-            <button class="goal-btn" id="g-custom" onclick="openModal('m-custom-goal')">رقم ➕</button>
+          <button class="goal-btn active" id="g-33" onclick="setG(33)">
+            ٣٣
+          </button>
+          <button class="goal-btn" id="g-100" onclick="setG(100)">١٠٠</button>
+          <button class="goal-btn" id="g-1000" onclick="setG(1000)">
+            ١٠٠٠
+          </button>
+          <button
+            class="goal-btn"
+            id="g-custom"
+            onclick="openModal('m-custom-goal')"
+          >
+            رقم ➕
+          </button>
         </div>
 
         <div class="bead-ring">
-            <svg class="bead-svg" viewBox="0 0 250 250"><circle class="bead-track" cx="125" cy="125" r="120"></circle><circle class="bead-progress" id="bead-progress-bar" cx="125" cy="125" r="120"></circle></svg>
-            <button class="bead-core" onclick="tapSubha()">
-                <div style="font-size: 0.9rem; margin-bottom: -5px; opacity: 0.8; font-weight: 700;">أستغفر الله</div>
-                <div class="bead-lbl" id="sess-v-ui">٠</div>
-                <span class="bead-pct-label" id="bead-pct">٠٪</span>
-            </button>
-        </div>
-
-        <div style="margin: 10px 0 20px; display: flex; flex-direction: column; align-items: center; gap: 10px;">
-            <div style="font-size: 0.9rem; color: var(--text-muted); font-weight: 700;">
-                المستهدف للجلسة: <span id="tg-v-ui" style="color: var(--primary-light); font-size: 1.1rem; font-family:'Scheherazade New', serif;">٠</span>
+          <svg class="bead-svg" viewBox="0 0 250 250">
+            <circle class="bead-track" cx="125" cy="125" r="120"></circle>
+            <circle
+              class="bead-progress"
+              id="bead-progress-bar"
+              cx="125"
+              cy="125"
+              r="120"
+            ></circle>
+          </svg>
+          <button class="bead-core" onclick="tapSubha()">
+            <div
+              style="
+                font-size: 0.9rem;
+                margin-bottom: -5px;
+                opacity: 0.8;
+                font-weight: 700;
+              "
+            >
+              أستغفر الله
             </div>
-            <button class="btn-royal" style="background:transparent; border:1px solid rgba(196, 58, 58, 0.4); color:var(--danger); box-shadow:none; padding: 6px 20px; width: fit-content; border-radius: 12px; font-size: 0.85rem;" onclick="resetSess()">تصفير العداد ↺</button>
+            <div class="bead-lbl" id="sess-v-ui">٠</div>
+            <span class="bead-pct-label" id="bead-pct">٠٪</span>
+          </button>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px;">
-            <button class="btn-royal" onclick="saveW()">✓ حفظ العمل</button>
-            <button class="btn-royal" style="background:#1a1a2e; color:var(--text-muted);" onclick="openManualModal()">➕ رصيد يدوي</button>
+        <div
+          style="
+            margin: 10px 0 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+          "
+        >
+          <div
+            style="
+              font-size: 0.9rem;
+              color: var(--text-muted);
+              font-weight: 700;
+            "
+          >
+            المستهدف للجلسة:
+            <span
+              id="tg-v-ui"
+              style="
+                color: var(--primary-light);
+                font-size: 1.1rem;
+                font-family: &quot;Scheherazade New&quot;, serif;
+              "
+              >٠</span
+            >
+          </div>
+          <button
+            class="btn-royal"
+            style="
+              background: transparent;
+              border: 1px solid rgba(196, 58, 58, 0.4);
+              color: var(--danger);
+              box-shadow: none;
+              padding: 6px 20px;
+              width: fit-content;
+              border-radius: 12px;
+              font-size: 0.85rem;
+            "
+            onclick="resetSess()"
+          >
+            تصفير العداد ↺
+          </button>
         </div>
+
+        <div
+          style="
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+          "
+        >
+          <button class="btn-royal" onclick="saveW()">✓ حفظ العمل</button>
+          <button
+            class="btn-royal"
+            style="background: #1a1a2e; color: var(--text-muted)"
+            onclick="openManualModal()"
+          >
+            ➕ رصيد يدوي
+          </button>
+        </div>
+      </div>
     </div>
-</div>
 
-<div id="s-admin" class="screen">
-    <div class="container">
-        <h1 class="logo-main" style="font-size: 2rem;">لوحة المدير</h1>
-        
+    <div id="s-admin" class="screen">
+      <div class="container">
+        <h1 class="logo-main" style="font-size: 2rem">لوحة المدير</h1>
+
         <div class="card-master">
-            <h3 style="color:var(--primary-light); margin-bottom:12px;">بدء تحدي جديد 🏆</h3>
-            <input type="text" id="nc-title" class="input-field" placeholder="عنوان التحدي">
-            <input type="number" id="nc-goal" class="input-field" placeholder="الهدف الرقمي (مثلاً 1000000)">
-            <p style="font-size: 0.8rem; margin-bottom: 8px; color: var(--text-muted);">اختار المشاركين:</p>
-            <div id="admin-user-checkboxes" style="max-height: 120px; overflow-y: auto; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 10px; margin-bottom: 15px;"></div>
-            <button class="btn-royal" onclick="addChallenge()">ابدأ التحدي 🔥</button>
+          <h3
+            style="color: var(--primary-light); margin-bottom: 12px"
+            id="admin-chal-form-title"
+          >
+            بدء تحدي جديد 🏆
+          </h3>
+          <input
+            type="text"
+            id="nc-title"
+            class="input-field"
+            placeholder="عنوان التحدي"
+          />
+          <input
+            type="number"
+            id="nc-goal"
+            class="input-field"
+            placeholder="الهدف الرقمي (مثلاً 1000000)"
+          />
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 15px;
+              color: var(--text-muted);
+              font-size: 0.9rem;
+            "
+          >
+            <input type="checkbox" id="nc-active" checked /> هل التحدي نشط؟
+            (سيظهر للمشاركين)
+          </label>
+          <input
+            type="number"
+            id="nc-days"
+            class="input-field"
+            placeholder="عدد أيام التحدي (اختياري)"
+            style="margin-bottom: 10px"
+          />
+          <p
+            style="
+              font-size: 0.8rem;
+              margin-bottom: 8px;
+              color: var(--text-muted);
+            "
+          >
+            اختار المشاركين:
+          </p>
+          <div
+            id="admin-user-checkboxes"
+            style="
+              max-height: 120px;
+              overflow-y: auto;
+              background: rgba(0, 0, 0, 0.3);
+              border-radius: 12px;
+              padding: 10px;
+              margin-bottom: 15px;
+            "
+          ></div>
+          <button
+            class="btn-royal"
+            id="admin-chal-btn"
+            onclick="addChallenge()"
+          >
+            ابدأ التحدي 🔥
+          </button>
+          <button
+            id="admin-chal-cancel"
+            class="btn-royal hidden"
+            style="
+              margin-top: 10px;
+              background: #2a1b1b;
+              color: var(--text-muted);
+            "
+            onclick="cancelEditChallenge()"
+          >
+            إلغاء التعديل
+          </button>
+        </div>
+
+        <h2
+          style="
+            font-size: 1.1rem;
+            color: var(--primary-light);
+            margin-bottom: 10px;
+          "
+        >
+          التحديات الحالية
+        </h2>
+        <div
+          id="admin-challenge-list-ui"
+          class="ranking-list"
+          style="margin-bottom: 24px"
+        ></div>
+
+        <div class="card-master">
+          <h3 style="color: var(--primary-light); margin-bottom: 12px">
+            إدارة الأوسمة 🏅
+          </h3>
+          <div
+            style="
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+              margin-bottom: 10px;
+            "
+          >
+            <input
+              type="text"
+              id="nb-icon"
+              class="input-field"
+              placeholder="الأيقونة (مثلاً ⭐)"
+              style="margin-bottom: 0"
+            />
+            <input
+              type="text"
+              id="nb-title"
+              class="input-field"
+              placeholder="اسم الوسام"
+              style="margin-bottom: 0"
+            />
+          </div>
+          <input
+            type="number"
+            id="nb-target"
+            class="input-field"
+            placeholder="العدد المطلوب (مثلاً 1000)"
+          />
+          <button class="btn-royal" onclick="addBadge()">
+            إضافة وسام جديد
+          </button>
+          <div
+            id="admin-badge-list-ui"
+            style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px"
+          ></div>
         </div>
 
         <div class="card-master">
-            <h3 style="color:var(--accent); margin-bottom:12px;">مستخدم جديد 👤</h3>
-            <input type="text" id="nu-name" class="input-field" placeholder="الاسم">
-            <input type="text" id="nu-user" class="input-field" placeholder="اليوزر">
-            <input type="text" id="nu-pass" class="input-field" placeholder="كلمة السر">
-            <button class="btn-royal" style="background:var(--accent); color:#000;" onclick="addUser()">إضافة ✦</button>
+          <h3 style="color: var(--accent); margin-bottom: 12px">
+            إضافة مستخدم جديد 👤
+          </h3>
+          <input
+            type="text"
+            id="nu-name"
+            class="input-field"
+            placeholder="الاسم الكامل"
+          />
+          <input
+            type="email"
+            id="nu-email"
+            class="input-field"
+            placeholder="البريد الإلكتروني"
+          />
+          <input
+            type="password"
+            id="nu-pass"
+            class="input-field"
+            placeholder="كلمة السر للجهاز"
+          />
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 10px;
+              margin-bottom: 15px;
+              color: var(--text-muted);
+              font-size: 0.9rem;
+            "
+          >
+            <input type="checkbox" id="nu-hidden" /> عضو مخفي (يراه الآدمن فقط)
+          </label>
+          <button
+            class="btn-royal"
+            style="background: var(--accent); color: #000"
+            onclick="addUser()"
+          >
+            إنشاء المستخدم ✓
+          </button>
         </div>
 
-        <h2 style="font-size: 1.1rem; color: var(--primary-light); margin-bottom:10px;">✦ الأعضاء والسلوكيات</h2>
+        <h2
+          style="
+            font-size: 1.1rem;
+            color: var(--primary-light);
+            margin-bottom: 10px;
+          "
+        >
+          الأعضاء والسلوكيات
+        </h2>
         <div id="admin-user-list-ui" class="ranking-list"></div>
-        <button class="btn-royal" style="margin-top:20px; background:none; color:var(--text-muted);" onclick="navTo('s-dash')">خروج</button>
-    </div>
-</div>
 
-<div id="s-settings" class="screen">
-    <div class="container">
+        <div class="card-master" style="margin-top: 24px">
+          <h3 style="color: var(--fire); margin-bottom: 12px">
+            ذكر اليوم / رسالة تحفيزية 🕯️
+          </h3>
+          <textarea
+            id="admin-daily-msg"
+            class="input-field"
+            rows="3"
+            placeholder="اكتب رسالة تظهر لجميع المشاركين..."
+            style="resize: none"
+          ></textarea>
+          <button
+            class="btn-royal"
+            style="background: linear-gradient(135deg, var(--fire), #cc4400)"
+            onclick="saveDailyMsg()"
+          >
+            نشر الرسالة
+          </button>
+        </div>
+        <button
+          class="btn-royal"
+          style="margin-top: 20px; background: none; color: var(--text-muted)"
+          onclick="navTo('s-dash')"
+        >
+          خروج
+        </button>
+      </div>
+    </div>
+
+    <div id="s-settings" class="screen">
+      <div class="container">
         <h1 class="logo-main">حسابي</h1>
-        <div id="profile-area-ui" class="card-master" style="text-align:center;"></div>
-        <button class="btn-royal" style="background:var(--danger);" onclick="logout()">تسجيل الخروج</button>
+        <div
+          id="profile-area-ui"
+          class="card-master"
+          style="text-align: center"
+        ></div>
+        <button
+          class="btn-royal"
+          style="background: var(--danger)"
+          onclick="handleLogout()"
+        >
+          تسجيل الخروج
+        </button>
+      </div>
     </div>
-</div>
 
-<nav id="app-nav" class="nav-base" style="display:none;">
-    <button class="nav-tab active" id="n-dash" onclick="navTo('s-dash')"><span class="ico">🏆</span><span>ترتيب</span></button>
-    <button class="nav-tab" id="n-tasbih" onclick="navTo('s-tasbih')"><span class="ico">📿</span><span>سبحة</span></button>
-    <button class="nav-tab" id="n-history" onclick="navTo('s-history')"><span class="ico">📜</span><span>سجل</span></button>
-    <button class="nav-tab" id="n-settings" onclick="navTo('s-settings')"><span class="ico">👤</span><span>حسابي</span></button>
-</nav>
+    <nav id="app-nav" class="nav-base" style="display: none">
+      <button class="nav-tab active" id="n-dash" onclick="navTo('s-dash')">
+        <span class="ico">🏆</span><span>ترتيب</span>
+      </button>
+      <button class="nav-tab" id="n-tasbih" onclick="navTo('s-tasbih')">
+        <span class="ico">📿</span><span>سبحة</span>
+      </button>
+      <button class="nav-tab" id="n-honor" onclick="navTo('s-honor')">
+        <span class="ico">🌟</span><span>الشرف</span>
+      </button>
+      <button class="nav-tab" id="n-history" onclick="navTo('s-history')">
+        <span class="ico">📜</span><span>سجل</span>
+      </button>
+      <button class="nav-tab" id="n-settings" onclick="navTo('s-settings')">
+        <span class="ico">👤</span><span>حسابي</span>
+      </button>
+    </nav>
 
-<script>
-let state = {
-    users: [
-        { id: 'u1', name: 'المهندس مصطفى', email: 'mustafa', pass: '1234', isAdmin: true, gems: 25 },
-        { id: 'u2', name: 'أحمد علي', email: 'ahmed', pass: '000', isAdmin: false, gems: 12 },
-        { id: 'u3', name: 'فاطمة الزهراء', email: 'fatima', pass: '000', isAdmin: false, gems: 18 }
-    ],
-    challenges: [
-        { id: 'c1', title: 'تحدي المليون الأكبر', goal: 1000000, participants: ['u1', 'u2', 'u3'], isActive: true }
-    ],
-    progress: { 'u1_c1': 520100, 'u2_c1': 320000, 'u3_c1': 450000 },
-    logs: [],
-    currentUser: null, currentChallengeId: 'c1', subGoal: 33
-};
+    <script>
+      // ─────────────────────────────────────────────────────────────────────────────
+      // SUPABASE CONFIGURATION - ضع بياناتك هنا
+      // ─────────────────────────────────────────────────────────────────────────────
+      const SUPABASE_URL = "https://oamkkuskpzectkixynyb.supabase.co";
+      const SUPABASE_ANON_KEY =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hbWtrdXNrcHplY3RraXh5bnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzg0MTksImV4cCI6MjA4OTg1NDQxOX0.FDTCL_fgRsHkUmVk3OYSwU7eS1EgtSRBxL_uaSLCvhM";
+      const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-function save() { localStorage.setItem('million_v18', JSON.stringify(state)); }
-function load() {
-    const d = localStorage.getItem('million_v18') || localStorage.getItem('million_v17');
-    if (d) state = Object.assign(state, JSON.parse(d));
-    const s = sessionStorage.getItem('_sess');
-    if (s) { state.currentUser = state.users.find(u => u.id === s); if (state.currentUser) go('s-dash'); } 
-    else go('s-login');
-}
+      let state = {
+        users: [],
+        challenges: [],
+        progress: {},
+        logs: [],
+        badges: [],
+        dailyMsg: "",
+        currentUser: null,
+        currentChallengeId: "",
+        subGoal: 33,
+        soundOn: true,
+      };
 
-function handleLogin() {
-    const id = document.getElementById('login-id').value.trim();
-    const p = document.getElementById('login-pass').value.trim();
-    const u = state.users.find(x => (x.email === id || x.name === id) && x.pass === p);
-    if (u) { state.currentUser = u; sessionStorage.setItem('_sess', u.id); go('s-dash'); }
-    else toast('يرجى التأكد من البيانات');
-}
-function logout() { sessionStorage.clear(); location.reload(); }
+      function save() {
+        // لم نعد بحاجة لـ localStorage للحفظ الكلي، سنقوم بالحفظ المباشر لكل عملية.
+        localStorage.setItem("million_v19_offline", JSON.stringify(state));
+      }
+      async function load() {
+        // جلب البيانات من Supabase
+        try {
+          const {
+            data: { session },
+          } = await db.auth.getSession();
 
-function go(id) {
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    
-    const nav = document.getElementById('app-nav');
-    if (id === 's-login') { nav.style.display = 'none'; } 
-    else { 
-        nav.style.display = 'flex'; 
-        document.querySelectorAll('.nav-tab').forEach(n => n.classList.remove('active'));
-        const tab = document.getElementById('n-' + id.replace('s-',''));
-        if(tab) tab.classList.add('active');
-    }
-    if (id === 's-dash') syncDash();
-    if (id === 's-tasbih') syncTasbih();
-    if (id === 's-history') syncHistory();
-    if (id === 's-settings') syncProfile();
-    syncAdmin();
-}
-function navTo(id) { go(id); }
+          // تحديد الأعمدة المطلوبة بدلاً من جلب كل شيء للمحافظة على الأمان
+          const publicProfileColumns = "id, name, avatar_url, gems, is_hidden, is_admin";
+          const [u, c, p, b, s] = await Promise.all([
+            db.from("profiles").select(publicProfileColumns),
+            db.from("challenges").select("id, title, goal, is_active, participants, end_date"),
+            db.from("progress").select("id, user_id, challenge_id, score"),
+            db.from("badges").select("id, name, icon, target"),
+            db.from("app_settings").select("key, value"),
+          ]);
 
-/* ─── DASHBOARD ─── */
-function syncDash() {
-    const h = document.getElementById('dash-header'); if(!h) return;
-    h.innerHTML = `
+          if (u.data) state.users = u.data;
+          if (c.data) state.challenges = c.data;
+          if (p.data) {
+            state.progress = {};
+            p.data.forEach((item) => (state.progress[item.id] = item.score));
+          }
+          if (b.data) state.badges = b.data;
+          if (s.data) {
+            const msg = s.data.find((x) => x.key === "daily_msg");
+            if (msg) state.dailyMsg = msg.value;
+          }
+
+          if (session) {
+            state.currentUser = state.users.find(
+              (ux) => ux.id === session.user.id,
+            );
+            if (state.currentUser) {
+              // جلب السجلات بناءً على الصلاحية
+              let logQuery = db
+                .from("logs")
+                .select("id, user_id, challenge_id, type, amount, date_text")
+                .order("created_at", { ascending: false })
+                .limit(100);
+              if (!state.currentUser.is_admin)
+                logQuery = logQuery.eq("user_id", state.currentUser.id);
+              const { data: lData } = await logQuery;
+              if (lData)
+                state.logs = lData.map((log) => ({
+                  ...log,
+                  id: log.id,
+                  userId: log.user_id,
+                  challengeId: log.challenge_id,
+                  type: log.type,
+                  amount: log.amount,
+                  date: log.date_text,
+                }));
+
+              go("s-dash");
+            } else {
+              // في حالة وجود جلسة ولكن لا يوجد بروفايل بعد (يحدث أحياناً قبل عمل الـ Trigger)
+              setTimeout(load, 1000);
+            }
+          } else {
+            go("s-login");
+          }
+          setupRealtime();
+        } catch (err) {
+          console.error("Error loading Supabase:", err);
+          toast("خطأ في الاتصال ❌");
+        }
+      }
+
+      // مراقبة تغييرات حالة الدخول
+      db.auth.onAuthStateChange((event, session) => {
+        if (event === "SIGNED_IN") load();
+        if (event === "SIGNED_OUT") {
+          state.currentUser = null;
+          go("s-login");
+        }
+      });
+
+      async function handleLogin() {
+        const email = document.getElementById("login-id").value.trim();
+        const password = document.getElementById("login-pass").value.trim();
+
+        const { data, error } = await db.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          toast(
+            "خطأ: " +
+              (error.message === "Invalid login credentials"
+                ? "بيانات الدخول غير صحيحة"
+                : error.message),
+          );
+        } else {
+          toast("تم تسجيل الدخول بنجاح ✓");
+        }
+      }
+
+      async function handleLogout() {
+        await db.auth.signOut();
+        // مسح بيانات الجلسة من التخزين المحلي
+        localStorage.removeItem("million_v19_offline");
+        location.reload();
+      }
+
+      let isSignupMode = false;
+      function toggleAuthMode() {
+        isSignupMode = !isSignupMode;
+        document
+          .getElementById("signup-name")
+          .classList.toggle("hidden", !isSignupMode);
+        document
+          .getElementById("btn-login-action")
+          .classList.toggle("hidden", isSignupMode);
+        document
+          .getElementById("btn-signup-action")
+          .classList.toggle("hidden", !isSignupMode);
+        document.getElementById("toggle-auth-text").innerText = isSignupMode
+          ? "لديك حساب بالفعل؟ سجل دخول"
+          : "ليس لديك حساب؟ سجل الآن";
+
+        // تحسين التذكر التلقائي
+        const passInput = document.getElementById("login-pass");
+        passInput.autocomplete = isSignupMode
+          ? "new-password"
+          : "current-password";
+      }
+
+      async function handleSignup() {
+        const name = document.getElementById("signup-name").value.trim();
+        const email = document.getElementById("login-id").value.trim();
+        const password = document.getElementById("login-pass").value.trim();
+
+        if (!name || !email || !password) return toast("يرجى ملء جميع الخانات");
+
+        const { data, error } = await db.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name: name },
+          },
+        });
+
+        if (error) {
+          toast("خطأ: " + error.message);
+        } else {
+          toast(
+            "تم إنشاء الحساب! افحص بريدك لتأکيد التسجيل (إذا تم تفعيل التأكيد)",
+          );
+          if (data.user) {
+            // Success
+            toggleAuthMode();
+          }
+        }
+      }
+
+      function setupRealtime() {
+        // الاستماع لكل التغييرات في الجداول الأساسية
+        db.channel("public:all")
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "progress" },
+            (payload) => {
+              if (payload.new) {
+                state.progress[payload.new.id] = payload.new.score;
+                if (
+                  document.getElementById("s-dash").classList.contains("active")
+                )
+                  syncDash();
+                if (
+                  document
+                    .getElementById("s-honor")
+                    .classList.contains("active")
+                )
+                  syncHonor();
+              }
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "app_settings" },
+            (payload) => {
+              if (payload.new && payload.new.key === "daily_msg") {
+                state.dailyMsg = payload.new.value;
+                if (
+                  document.getElementById("s-dash").classList.contains("active")
+                )
+                  syncDash();
+              }
+            },
+          )
+          .on(
+            "postgres_changes",
+            { event: "*", schema: "public", table: "challenges" },
+            () => {
+              load();
+            },
+          )
+          .subscribe();
+      }
+
+      function go(id) {
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        document.getElementById(id).classList.add("active");
+
+        const nav = document.getElementById("app-nav");
+        if (id === "s-login") {
+          nav.style.display = "none";
+        } else {
+          nav.style.display = "flex";
+          document
+            .querySelectorAll(".nav-tab")
+            .forEach((n) => n.classList.remove("active"));
+          const tab = document.getElementById("n-" + id.replace("s-", ""));
+          if (tab) tab.classList.add("active");
+        }
+        if (id === "s-dash") syncDash();
+        if (id === "s-tasbih") syncTasbih();
+        if (id === "s-history") syncHistory();
+        if (id === "s-honor") syncHonor();
+        if (id === "s-settings") syncProfile();
+        syncAdmin();
+      }
+      function navTo(id) {
+        go(id);
+      }
+
+      /* ─── DASHBOARD ─── */
+      function syncDash() {
+        const h = document.getElementById("dash-header");
+        if (!h) return;
+        h.innerHTML = `
         <div style="display:flex; align-items:center; gap:12px;">
-            <div style="width:48px; height:48px; background:var(--primary-dark); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--primary); font-weight:700;">${state.currentUser.name.slice(0,1)}</div>
+            <div style="flex-shrink:0;">${getAvatarHTML(state.currentUser, "48px")}</div>
             <div>
                 <div style="font-weight:700;">${state.currentUser.name}</div>
-                ${state.currentUser.isAdmin ? `<button onclick="navTo('s-admin')" style="color:var(--primary); font-size:0.6rem; background:none; border:none; border-bottom:1px solid;">لوحة الإدارة</button>` : ''}
+                ${state.currentUser.is_admin ? `<button onclick="navTo('s-admin')" style="color:var(--primary); font-size:0.6rem; background:none; border:none; border-bottom:1px solid;">لوحة الإدارة</button>` : ""}
             </div>
         </div>
         <div class="pouch-gem">💎 ${ar(state.currentUser.gems || 0)}</div>
     `;
-    const cur = state.challenges.find(x => x.id === state.currentChallengeId);
-    if(cur) {
-        const val = state.progress[`${state.currentUser.id}_${cur.id}`] || 0;
-        const pct = Math.min(100, (val / cur.goal * 100)).toFixed(1);
-        const rem = Math.max(0, cur.goal - val);
-        document.getElementById('hero-card-v3-area').innerHTML = `
+
+        // Daily Message + Auto Azkar
+        const msgArea = document.getElementById("daily-msg-area");
+        if (msgArea) {
+          const azkarList = [
+            '"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ" - الرعد ٢٨',
+            '"مَن قالَ: سُبحانَ اللهِ وبحَمدِه في يَومٍ مائةَ مرَّةٍ حُطَّتْ خطاياه" - متفق عليه',
+            '"سيد الاستغفار: اللهم أنت ربي لا إله إلا أنت" - البخاري',
+            '"أقرب ما يكون العبد من ربه وهو ساجد فأكثروا الدعاء" - مسلم',
+            '"لا حول ولا قوة إلا بالله كنز من كنوز الجنة" - متفق عليه',
+            '"من لزم الاستغفار جعل الله له من كل ضيق مخرجاً" - أبو داود',
+            '"إن الله يحب العبد التقي الغني الخفي" - مسلم',
+            '"ذكر الله شفاء القلوب" - ابن القيم',
+            '"أحب الكلام إلى الله: سبحان الله وبحمده" - مسلم',
+            "استغفر الآن… فقد يكون فرجك في هذه اللحظة 🤍",
+            "كل استغفار تمحو به ذنب وتفتح به باب رزق 🌿",
+            "لا تؤجل الاستغفار… فربما تكون هذه فرصتك للنجاة",
+            "الاستغفار يغيّر الأقدار بإذن الله… فاستمر ✨",
+            "حين تضيق بك الدنيا… أكثر من الاستغفار 🤲",
+            "استغفارك اليوم هو راحتك غدًا 💛",
+            "باب التوبة مفتوح… فقط قل: أستغفر الله",
+            "ربك يحب أن تغفر… فلا تتردد في العودة إليه ❤️",
+            "كل مرة تقول أستغفر الله… أنت تقترب من الفرج",
+            "الاستغفار حياة للقلب… لا تحرم نفسك منه 🌸",
+            "استغفر ولو كنت تظن أن ذنبك كبير… فربك أكبر",
+            "اجعل لسانك رطبًا بالاستغفار… تنعم بالسكينة ✨",
+            "ربما دعاءك متوقف على استغفار صادق… جرّب الآن",
+            "الاستغفار يمحو الماضي… ويصنع بداية جديدة 🔄",
+            "أنت لا تعلم أي استغفار سيغير حياتك… فلا تتوقف 💫",
+            '"من صلى عليّ صلاة واحدة صلى الله عليه بها عشراً" - مسلم',
+          ];
+          const todayIdx = Math.floor(Date.now() / 60000) % azkarList.length;
+          const autoZikr = azkarList[todayIdx];
+          let html = `<div class="daily-msg" style="margin-bottom:12px;"><div style="font-size:0.65rem; color:var(--text-dim); margin-bottom:4px;">📖 ذكر تحفيزي</div><div class="msg-text" style="font-size:1rem;">${autoZikr}</div></div>`;
+          if (state.dailyMsg)
+            html += `<div class="daily-msg"><div style="font-size:0.65rem; color:var(--fire); margin-bottom:4px;">📢ال رسالة الإدارة مصطفي </div><div class="msg-text">${state.dailyMsg}</div></div>`;
+          msgArea.innerHTML = html;
+        }
+
+        // Switch Challenges Chips
+        const userChallenges = state.challenges.filter(
+          (c) =>
+            c.participants.includes(state.currentUser.id) &&
+            (c.is_active || state.currentUser.is_admin),
+        );
+        const chips = document.getElementById("dash-chips-area");
+        if (chips) {
+          if (userChallenges.length > 1) {
+            chips.innerHTML = userChallenges
+              .map(
+                (c) => `
+                <div onclick="switchChallenge('${c.id}')" style="flex-shrink:0; padding:6px 16px; border-radius:30px; border:1px solid ${c.id === state.currentChallengeId ? "var(--primary)" : "rgba(255,255,255,0.1)"}; background:${c.id === state.currentChallengeId ? "rgba(201,148,58,0.2)" : "rgba(255,255,255,0.05)"}; color:${c.id === state.currentChallengeId ? "var(--primary-light)" : "var(--text-muted)"}; cursor:pointer; font-size:0.8rem; white-space:nowrap; transition:0.3s;">
+                    ${c.title} ${!c.is_active && state.currentUser.is_admin ? "🚫" : ""}
+                </div>
+            `,
+              )
+              .join("");
+            chips.style.display = "flex";
+          } else {
+            chips.innerHTML = "";
+            chips.style.display = "none";
+          }
+        }
+
+        const cur = state.challenges.find(
+          (x) =>
+            x.id === state.currentChallengeId &&
+            x.participants.includes(state.currentUser.id) &&
+            (x.is_active || state.currentUser.is_admin),
+        );
+        const activeChal = cur || userChallenges[0];
+
+        if (activeChal) {
+          state.currentChallengeId = activeChal.id;
+          const val =
+            state.progress[`${state.currentUser.id}_${activeChal.id}`] || 0;
+          const pct = Math.min(100, (val / activeChal.goal) * 100).toFixed(1);
+          const rem = Math.max(0, activeChal.goal - val);
+          document.getElementById("hero-card-v3-area").innerHTML = `
             <div class="hero-card-v3">
                 <div class="hero-svg-box">
-                    <svg class="hero-svg" viewBox="0 0 100 100"><circle class="hero-track" cx="50" cy="50" r="40"></circle><circle class="hero-progress" cx="50" cy="50" r="40" style="stroke-dashoffset: ${238 - (238 * pct / 100)};"></circle></svg>
+                    <svg class="hero-svg" viewBox="0 0 100 100"><circle class="hero-track" cx="50" cy="50" r="40"></circle><circle class="hero-progress" cx="50" cy="50" r="40" style="stroke-dashoffset: ${238 - (238 * pct) / 100};"></circle></svg>
                     <div class="hero-pct-text">${ar(Math.floor(pct))}%</div>
                 </div>
                 <div style="flex:1;">
-                    <div style="font-weight:700; color:var(--primary-light); margin-bottom:5px;">${cur.title}</div>
+                    <div style="font-weight:700; color:var(--primary-light); margin-bottom:5px;">${activeChal.title}</div>
                     <div class="hero-stat-row"><span class="hero-stat-lbl">إنجاز ✅</span><span class="hero-stat-val">${fmt(val)}</span></div>
                     <div class="hero-stat-row"><span class="hero-stat-lbl">متبقي ✨</span><span class="hero-stat-val" style="color:var(--text);">${fmt(rem)}</span></div>
                 </div>
             </div>
+            <div id="countdown-live"></div>
         `;
-        renderRanks(cur);
-    }
-}
-function renderRanks(chal) {
-    const list = state.users.filter(u => chal.participants.includes(u.id)).map(u => ({ ...u, score: state.progress[`${u.id}_${chal.id}`] || 0 })).sort((a,b) => b.score - a.score);
-    const maxScore = list[0].score;
-    document.getElementById('rankings-area-ui').innerHTML = list.map((u, i) => {
-        const isMe = u.id === state.currentUser.id; const isFirst = i === 0; const gap = maxScore - u.score;
-        return `<div class="ranking-row ${isMe ? 'me' : ''}"><div class="rank-badge">${isFirst?'🔥':ar(i+1)}</div><div style="flex:1;"><div style="font-weight:700;">${u.name}</div><div style="font-size:0.6rem; color:${isFirst?'var(--accent)':'var(--danger)'};">${isFirst?'المتصدر':'باقٍ لك '+fmt(gap)}</div></div><div style="text-align:left;"><div style="font-family:'Scheherazade New'; font-size:1.5rem; color:var(--primary-light);">${fmt(u.score)}</div></div></div>`;
-    }).join('');
-}
-
-/* ─── HISTORY (LOGS) ─── */
-function syncHistory(adminUserId = null) {
-    const targetId = adminUserId || state.currentUser.id;
-    const history = state.logs.filter(l => l.userId === targetId).reverse();
-    const area = document.getElementById('history-list-ui'); if(!area) return;
-    area.innerHTML = history.length ? history.map(l => `
-        <div class="log-row ${l.type==='manual'?'manual':''}">
-            <div class="log-info">
-                <div class="log-type">${l.type==='manual'?'💎 رصيد يدوي':'📿 جلسة سبحة'}</div>
-                <div class="log-date">${l.date}</div>
+          if (activeChal.end_date) startLiveCountdown(activeChal.end_date);
+          renderRanks(activeChal);
+          document.getElementById("rank-title-ui").classList.remove("hidden");
+        } else {
+          document.getElementById("hero-card-v3-area").innerHTML = `
+            <div class="card-master" style="text-align:center; padding:40px 20px;">
+                <div style="font-size:3rem; margin-bottom:15px;">✨</div>
+                <h3 style="color:var(--primary-light);">لا يوجد تحدي حالي</h3>
+                <p style="color:var(--text-muted); font-size:0.9rem;">انتظر انضمامك لتحدي جديد من قبل الإدارة</p>
             </div>
-            <div class="log-amt">${fmt(l.amount)}</div>
+        `;
+          document.getElementById("rankings-area-ui").innerHTML = "";
+          document.getElementById("rank-title-ui").classList.add("hidden");
+        }
+      }
+      function renderRanks(chal) {
+        const list = state.users
+          .filter((u) => chal.participants.includes(u.id))
+          .filter((u) => {
+            // Logic for hidden users: Admin sees everyone, users see themselves, else hide if u.isHidden
+            if (state.currentUser.is_admin) return true;
+            if (u.id === state.currentUser.id) return true;
+            return u.is_hidden === false;
+          })
+          .map((u) => ({
+            ...u,
+            score: state.progress[`${u.id}_${chal.id}`] || 0,
+          }))
+          .sort((a, b) => b.score - a.score);
+
+        if (list.length === 0) {
+          document.getElementById("rankings-area-ui").innerHTML =
+            '<p style="text-align:center; opacity:0.6; padding:10px;">لا يوجد منافسين متاحين للرؤية.</p>';
+          return;
+        }
+        const maxScore = list[0].score;
+        document.getElementById("rankings-area-ui").innerHTML = list
+          .map((u, i) => {
+            const isMe = u.id === state.currentUser.id;
+            const isFirst = i === 0;
+            const gap = maxScore - u.score;
+            const hiddenTag =
+              u.is_hidden && state.currentUser.is_admin
+                ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>'
+                : "";
+            return `
+            <div class="ranking-row ${isMe ? "me" : ""}">
+                <div class="rank-badge">${isFirst ? "🔥" : ar(i + 1)}</div>
+                <div style="width:44px; height:44px; flex-shrink:0;">${getAvatarHTML(u, "44px")}</div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;">${u.name} ${hiddenTag}</div>
+                    <div style="font-size:0.6rem; color:${isFirst ? "var(--accent)" : "var(--danger)"};">${isFirst ? "المتصدر" : "باقٍ لك " + fmt(gap)}</div>
+                </div>
+                <div style="text-align:left;">
+                    <div style="font-family:'Scheherazade New'; font-size:1.5rem; color:var(--primary-light);">${fmt(u.score)}</div>
+                </div>
+            </div>`;
+          })
+          .join("");
+      }
+      function switchChallenge(id) {
+        state.currentChallengeId = id;
+        save();
+        syncDash();
+        toast(
+          "تم التبديل إلى: " + state.challenges.find((c) => c.id === id).title,
+        );
+      }
+
+      /* ─── HISTORY (LOGS) ─── */
+      function syncHistory(adminUserId = null) {
+        const targetId = adminUserId || state.currentUser.id;
+        const history = state.logs
+          .filter((l) => l.userId === targetId)
+          .reverse();
+        const area = document.getElementById("history-list-ui");
+        if (!area) return;
+        area.innerHTML = history.length
+          ? history
+              .map((l) => {
+                const chal = state.challenges.find(
+                  (c) => c.id === l.challengeId,
+                );
+                const chalName = chal ? chal.title : "تحدي عام";
+                return `
+            <div class="log-row ${l.type === "manual" ? "manual" : ""}">
+                <div class="log-info">
+                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                        <span class="log-type" style="margin:0;">${l.type === "manual" ? "💎 رصيد يدوي" : "📿 جلسة سبحة"}</span>
+                        <span style="font-size:0.65rem; padding:2px 8px; background:rgba(255,255,255,0.05); border-radius:8px; color:var(--diamond);">${chalName}</span>
+                    </div>
+                    <div class="log-date">${l.date}</div>
+                </div>
+                <div class="log-amt">${fmt(l.amount)}</div>
+            </div>
+        `;
+              })
+              .join("")
+          : '<p style="text-align:center; opacity:0.6;">لا توجد عمليات مسجلة بعد.</p>';
+      }
+
+      /* ─── TASBIH & SAVE ─── */
+      let sessCount = 0;
+      function syncTasbih() {
+        let c = state.challenges.find(
+          (x) =>
+            x.id === state.currentChallengeId &&
+            x.participants.includes(state.currentUser.id) &&
+            (x.isActive || state.currentUser.isAdmin),
+        );
+        if (!c)
+          c = state.challenges.filter(
+            (x) =>
+              x.participants.includes(state.currentUser.id) &&
+              (x.isActive || state.currentUser.isAdmin),
+          )[0];
+        if (c) state.currentChallengeId = c.id;
+
+        document.getElementById("t-chal-title-ui").textContent = c
+          ? c.title
+          : "تحدي عام (خارج المنافسة)";
+        document.getElementById("sess-v-ui").innerText = ar(sessCount);
+        document.getElementById("tg-v-ui").innerText = ar(state.subGoal);
+        const pct =
+          sessCount === 0
+            ? 0
+            : sessCount % state.subGoal === 0
+              ? 100
+              : ((sessCount % state.subGoal) / state.subGoal) * 100;
+        document.getElementById("bead-progress-bar").style.strokeDashoffset =
+          754 - (754 * pct) / 100;
+        document.getElementById("bead-pct").innerText =
+          ar(Math.floor(pct)) + "٪";
+        document
+          .querySelectorAll(".goal-btn")
+          .forEach((b) =>
+            b.classList.toggle(
+              "active",
+              b.id === "g-" + state.subGoal ||
+                (b.id === "g-custom" &&
+                  ![33, 100, 1000].includes(state.subGoal)),
+            ),
+          );
+      }
+      function setG(v) {
+        sessCount = 0;
+        state.subGoal = v;
+        save();
+        syncTasbih();
+      }
+      function tapSubha() {
+        sessCount++;
+        autoSaveSess();
+        syncTasbih();
+        spawnParticles();
+        if (sessCount % state.subGoal === 0) {
+          if ("vibrate" in navigator)
+            navigator.vibrate([100, 50, 100, 50, 200]);
+          playSound("complete");
+          toast("تم الوصول للورد! ✨");
+        } else {
+          if ("vibrate" in navigator) navigator.vibrate(30);
+          playSound("tap");
+        }
+      }
+      function resetSess() {
+        if (
+          sessCount > 0 &&
+          confirm("هل تريد تصفير العداد الحالي؟ لن يتم حفظه.")
+        ) {
+          sessCount = 0;
+          syncTasbih();
+          toast("تم التصفير ↺");
+        } else if (sessCount > 0 === false) {
+          sessCount = 0;
+          syncTasbih();
+        }
+      }
+      async function saveW() {
+        if (sessCount <= 0) return;
+        const k = state.currentUser.id + "_" + state.currentChallengeId;
+        const ch = state.challenges.find(
+          (c) => c.id === state.currentChallengeId,
+        );
+
+        // 1. Add Log to Supabase
+        const { data: logEntry } = await db.from("logs").insert([
+          {
+            user_id: state.currentUser.id,
+            challenge_id: state.currentChallengeId,
+            type: "subha",
+            amount: sessCount,
+            date_text:
+              new Date().toLocaleDateString("ar-EG") +
+              " " +
+              new Date().toLocaleTimeString("ar-EG", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+          },
+        ]);
+
+        // 2. Update Progress in Supabase (Upsert)
+        const oldScore = state.progress[k] || 0;
+        const newScore = oldScore + sessCount;
+        await db
+          .from("progress")
+          .upsert({
+            id: k,
+            user_id: state.currentUser.id,
+            challenge_id: state.currentChallengeId,
+            score: newScore,
+          });
+
+        // 3. Update Gems in Users table
+        const nG = Math.floor(newScore / 500) - Math.floor(oldScore / 500);
+        if (nG > 0) {
+          state.currentUser.gems = (state.currentUser.gems || 0) + nG;
+          await db
+            .from("profiles")
+            .update({ gems: state.currentUser.gems })
+            .eq("id", state.currentUser.id);
+        }
+
+        state.progress[k] = newScore;
+        save();
+        sessCount = 0;
+        syncTasbih();
+        syncDash();
+        toast("تم حفظ العمل بنجاح ✓");
+      }
+
+      /* ─── MODALS ─── */
+      function openManualModal() {
+        resetManualModal();
+        openModal("m-manual");
+      }
+      function resetManualModal() {
+        document.getElementById("manual-step-input").classList.remove("hidden");
+        document.getElementById("manual-step-confirm").classList.add("hidden");
+        document.getElementById("manual-val").value = "";
+      }
+      function showManualConfirm() {
+        const v = parseInt(document.getElementById("manual-val").value);
+        if (!v || v < 0) return;
+        document.getElementById("confirm-num-display").innerText = fmt(v);
+        document.getElementById("manual-step-input").classList.add("hidden");
+        document
+          .getElementById("manual-step-confirm")
+          .classList.remove("hidden");
+      }
+      async function submitManual() {
+        const v = parseInt(document.getElementById("manual-val").value);
+        const k = state.currentUser.id + "_" + state.currentChallengeId;
+
+        await db.from("logs").insert([
+          {
+            user_id: state.currentUser.id,
+            challenge_id: state.currentChallengeId,
+            type: "manual",
+            amount: v,
+            date_text:
+              new Date().toLocaleDateString("ar-EG") +
+              " " +
+              new Date().toLocaleTimeString("ar-EG", {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+          },
+        ]);
+
+        const newScore = (state.progress[k] || 0) + v;
+        await db
+          .from("progress")
+          .upsert({
+            id: k,
+            user_id: state.currentUser.id,
+            challenge_id: state.currentChallengeId,
+            score: newScore,
+          });
+
+        state.progress[k] = newScore;
+        save();
+        closeModal("m-manual");
+        syncDash();
+        syncTasbih();
+        toast("تمت الإضافة ✓");
+      }
+
+      /* ─── ADMIN ─── */
+      function syncAdmin() {
+        const cb = document.getElementById("admin-user-checkboxes");
+        if (!cb) return;
+        cb.innerHTML = state.users
+          .map(
+            (u) =>
+              `<label style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><input type="checkbox" value="${u.id}" class="nu-p"> ${u.name}</label>`,
+          )
+          .join("");
+
+        // Badge List
+        const bl = document.getElementById("admin-badge-list-ui");
+        if (bl) {
+          bl.innerHTML = state.badges
+            .map(
+              (b) => `
+            <div style="background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:10px; font-size:0.75rem; display:flex; align-items:center; gap:5px; border:1px solid rgba(255,255,255,0.1);">
+                <span>${b.icon} ${b.name} (${fmt(b.target)})</span>
+                <button onclick="deleteBadge('${b.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">×</button>
+            </div>
+        `,
+            )
+            .join("");
+        }
+
+        // Challenges List
+        document.getElementById("admin-challenge-list-ui").innerHTML =
+          state.challenges
+            .map(
+              (c) => `
+        <div class="ranking-row" style="border-right-color: ${c.is_active ? "var(--diamond)" : "var(--danger)"};">
+            <div style="flex:1;">
+                <strong>${c.title}</strong> ${!c.is_active ? '<span style="color:var(--danger); font-size:0.6rem;">(غير نشط 🚫)</span>' : ""}
+                <div style="font-size:0.6rem; color:var(--text-muted);">الهدف: ${fmt(c.goal)} | المشاركين: ${ar(c.participants.length)}</div>
+            </div>
+            <button onclick="editChallenge('${c.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">تعديل✏️</button>
+            <button onclick="deleteChallenge('${c.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; margin-right:8px;">حذف🗑️</button>
         </div>
-    `).join('') : '<p style="text-align:center; opacity:0.6;">لا توجد عمليات مسجلة بعد.</p>';
-}
-
-/* ─── TASBIH & SAVE ─── */
-let sessCount = 0;
-function syncTasbih() {
-    const c = state.challenges.find(x => x.id === state.currentChallengeId);
-    document.getElementById('t-chal-title-ui').textContent = c?c.title:'تحدي المليون';
-    document.getElementById('sess-v-ui').innerText = ar(sessCount);
-    document.getElementById('tg-v-ui').innerText = ar(state.subGoal);
-    const pct = sessCount === 0 ? 0 : ((sessCount % state.subGoal === 0) ? 100 : ((sessCount % state.subGoal) / state.subGoal * 100));
-    document.getElementById('bead-progress-bar').style.strokeDashoffset = 754 - (754 * pct / 100);
-    document.getElementById('bead-pct').innerText = ar(Math.floor(pct)) + '٪';
-    document.querySelectorAll('.goal-btn').forEach(b => b.classList.toggle('active', b.id==='g-'+state.subGoal || (b.id==='g-custom' && ![33,100,1000].includes(state.subGoal))));
-}
-function setG(v) { sessCount = 0; state.subGoal = v; save(); syncTasbih(); }
-function tapSubha() { sessCount++; syncTasbih(); if(sessCount % state.subGoal === 0) { if('vibrate' in navigator) navigator.vibrate([100, 50, 100]); toast('تم الوصول للورد! ✨'); } else if('vibrate' in navigator) navigator.vibrate(40); }
-function resetSess() { if(sessCount > 0 && confirm('هل تريد تصفير العداد الحالي؟ لن يتم حفظه.')) { sessCount = 0; syncTasbih(); toast('تم التصفير ↺'); } else if(sessCount > 0 === false) { sessCount = 0; syncTasbih(); } }
-function saveW() {
-    if(sessCount <= 0) return;
-    const k = state.currentUser.id+'_'+state.currentChallengeId;
-    const ch = state.challenges.find(c => c.id === state.currentChallengeId);
-    addLog(state.currentUser.id, state.currentChallengeId, 'subha', sessCount);
-    const old = state.progress[k]||0; state.progress[k] = old + sessCount;
-    const nG = Math.floor(state.progress[k]/500) - Math.floor(old/500);
-    if(nG>0) { state.currentUser.gems = (state.currentUser.gems||0)+nG; }
-    save(); sessCount=0; syncTasbih(); syncDash(); toast('تم حفظ العمل ✓');
-}
-
-/* ─── MODALS ─── */
-function openManualModal() { resetManualModal(); openModal('m-manual'); }
-function resetManualModal() { document.getElementById('manual-step-input').classList.remove('hidden'); document.getElementById('manual-step-confirm').classList.add('hidden'); document.getElementById('manual-val').value = ''; }
-function showManualConfirm() { const v = parseInt(document.getElementById('manual-val').value); if(!v||v<0) return; document.getElementById('confirm-num-display').innerText = fmt(v); document.getElementById('manual-step-input').classList.add('hidden'); document.getElementById('manual-step-confirm').classList.remove('hidden'); }
-function submitManual() { 
-    const v = parseInt(document.getElementById('manual-val').value); 
-    const k = state.currentUser.id+'_'+state.currentChallengeId;
-    addLog(state.currentUser.id, state.currentChallengeId, 'manual', v);
-    state.progress[k] = (state.progress[k]||0)+v; 
-    save(); closeModal('m-manual'); syncDash(); syncTasbih(); toast('تمت الإضافة ✓');
-}
-
-/* ─── ADMIN ─── */
-function syncAdmin() {
-    const cb = document.getElementById('admin-user-checkboxes'); if(!cb) return;
-    cb.innerHTML = state.users.map(u => `<label style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><input type="checkbox" value="${u.id}" class="nu-p" ${u.isAdmin?'checked disabled':''}> ${u.name}</label>`).join('');
-    
-    document.getElementById('admin-user-list-ui').innerHTML = state.users.map((u, i) => `
+    `,
+            )
+            .join("");
+        document.getElementById("admin-user-list-ui").innerHTML = state.users
+          .map(
+            (u, i) => `
         <div class="ranking-row">
             <div style="flex:1;">
-                <strong>${u.name}</strong>
-                <div style="font-size:0.6rem; color:var(--text-muted);">رصيد إجمالي: ${fmt(getTotal(u.id))}</div>
+                <strong>${u.name}</strong> ${u.is_hidden ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>' : ""}
+                <div style="font-size:0.6rem; color:var(--text-muted);">رصيد إجمالي: ${fmt(getTotal(u.id))} | الماس: ${ar(u.gems || 0)}</div>
             </div>
-            <button onclick="viewUserBehavior('${u.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">السلوك 🔍</button>
-            <button onclick="openEditUser(${i})" style="color:var(--text-dim); background:none; border:none; margin-right:8px; font-size:0.7rem;">تعديل✏️</button>
+            <div style="display:flex; gap:8px;">
+                <button onclick="viewUserBehavior('${u.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">السلوك 🔍</button>
+                <button onclick="openEditUser(${i})" style="color:var(--primary-light); background:none; border:none; border-bottom:1px solid; font-size:0.7rem;">تعديل✏️</button>
+            </div>
         </div>
-    `).join('');
-}
-function getTotal(uid) { let t=0; state.challenges.forEach(c => { if(c.participants.includes(uid)) t+=(state.progress[uid+'_'+c.id]||0); }); return t; }
-function viewUserBehavior(uid) { navTo('s-history'); syncHistory(uid); }
+    `,
+          )
+          .join("");
+      }
+      function getTotal(uid) {
+        let t = 0;
+        state.challenges.forEach((c) => {
+          if (c.participants.includes(uid))
+            t += state.progress[uid + "_" + c.id] || 0;
+        });
+        return t;
+      }
+      function viewUserBehavior(uid) {
+        navTo("s-history");
+        syncHistory(uid);
+      }
 
-function addUser() {
-    const n = document.getElementById('nu-name').value, e = document.getElementById('nu-user').value, p = document.getElementById('nu-pass').value;
-    if(!n||!e||!p) return alert('أكمل الخانات');
-    state.users.push({ id:'u'+Date.now(), name:n, email:e, pass:p, isAdmin:false, gems:0 });
-    save(); syncAdmin(); toast('العضو جاهز ✨');
-}
-function addChallenge() {
-    const t = document.getElementById('nc-title').value, g = parseInt(document.getElementById('nc-goal').value);
-    const p = Array.from(document.querySelectorAll('.nu-p:checked')).map(x => x.value);
-    if(!t||!g||p.length===0) return alert('بيانات ناقصة');
-    state.challenges.push({ id:'c'+Date.now(), title:t, goal:g, participants:p, isActive:true });
-    save(); syncAdmin(); toast('تم بدء التحدي 🏆');
-}
+      async function addChallenge() {
+        const t = document.getElementById("nc-title").value,
+          g = parseInt(document.getElementById("nc-goal").value);
+        const act = document.getElementById("nc-active").checked,
+          days = parseInt(document.getElementById("nc-days").value) || 0;
+        const participants = Array.from(
+          document.querySelectorAll(".nu-p:checked"),
+        ).map((cb) => cb.value);
 
-/* ─── UTILS ─── */
-function addLog(uid, cid, type, amt) {
-    const now = new Date();
-    const d = now.toLocaleDateString('ar-EG') + ' ' + now.toLocaleTimeString('ar-EG', {hour:'2-digit', minute:'2-digit'});
-    state.logs.push({ userId: uid, challengeId: cid, type: type, amount: amt, date: d });
-}
-function ar(n) { return n.toString().replace(/\d/g, d => '٠١٢٣٤٥٦٧٨٩'[d]); }
-function fmt(n) { return ar((n || 0).toLocaleString('en-US')); }
-function toast(m) { const t = document.getElementById('toast'); t.textContent = m; t.style.transform = 'translateX(-50%) translateY(0)'; setTimeout(() => t.style.transform = 'translateX(-50%) translateY(-100px)', 3000); }
-function openModal(id) { document.getElementById(id).style.display = 'flex'; }
-function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-function applyCustomGoal() { const v = parseInt(document.getElementById('custom-goal-val').value); if(!v||v<1) return; setG(v); closeModal('m-custom-goal'); }
-function syncProfile() { const u = state.currentUser; document.getElementById('profile-area-ui').innerHTML = `<div style="width:70px; height:70px; margin:0 auto 15px; background:var(--primary-dark); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--primary); font-size:1.5rem;">${u.name.slice(0,1)}</div><h2 style="color:var(--primary-light);">${u.name}</h2><div class="pouch-gem" style="width:fit-content; margin:15px auto;">💎 الماس: ${ar(u.gems || 0)}</div>`; }
+        if (!t || !g) return alert("أكمل بيانات التحدي");
 
-document.addEventListener('keydown', e => { if((e.code==='Space'||e.code==='Enter') && document.getElementById('s-tasbih').classList.contains('active')){ e.preventDefault(); tapSubha(); } });
-load();
-</script>
-</body>
+        const end =
+          days > 0
+            ? new Date(Date.now() + days * 86400000).toISOString()
+            : null;
+        const newChal = {
+          id: editingChallengeId || "c" + Date.now(),
+          title: t,
+          goal: g,
+          is_active: act,
+          duration_days: days,
+          end_date: end,
+          participants: participants,
+        };
+
+        if (editingChallengeId) {
+          await db
+            .from("challenges")
+            .update(newChal)
+            .eq("id", editingChallengeId);
+          const idx = state.challenges.findIndex(
+            (x) => x.id === editingChallengeId,
+          );
+          state.challenges[idx] = newChal;
+          editingChallengeId = null;
+          cancelEditChallenge();
+        } else {
+          await db.from("challenges").insert([newChal]);
+          state.challenges.push(newChal);
+        }
+
+        save();
+        syncAdmin();
+        toast("تم حفظ التحدي بنجاح ✨");
+      }
+
+      async function addUser() {
+        const name = document.getElementById("nu-name").value.trim();
+        const email = document.getElementById("nu-email").value.trim();
+        const password = document.getElementById("nu-pass").value.trim();
+        const isHidden = document.getElementById("nu-hidden").checked;
+
+        if (!name || !email || !password)
+          return toast("يرجى ملء جميع خانات المستخدم ⚠️");
+
+        toast("جاري إضافة المستخدم... ⏳");
+
+        // استخدام عميل مؤقت لتجنب تسجيل خروج المدير
+        const tempClient = supabase.createClient(
+          SUPABASE_URL,
+          SUPABASE_ANON_KEY,
+          {
+            auth: { persistSession: false },
+          },
+        );
+
+        const { data, error } = await tempClient.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { name: name },
+          },
+        });
+
+        if (error) {
+          toast("خطأ في الإضافة: " + error.message);
+        } else {
+          // تحديث ملف المستخدم لإضافة حالة الإخفاء
+          if (data.user) {
+            // انتظار قليلاً للتأكد من انتهاء الـ Trigger من إنشاء البروفايل
+            setTimeout(async () => {
+              await db
+                .from("profiles")
+                .update({ is_hidden: isHidden })
+                .eq("id", data.user.id);
+              load(); // تحديث القائمة
+            }, 2000);
+          }
+          toast("تمت إضافة المستخدم بنجاح! ✓");
+          document.getElementById("nu-name").value = "";
+          document.getElementById("nu-email").value = "";
+          document.getElementById("nu-pass").value = "";
+          document.getElementById("nu-hidden").checked = false;
+        }
+      }
+
+      let editingUserId = null;
+      function openEditUser(idx) {
+        const u = state.users[idx];
+        if (!u) return;
+        editingUserId = u.id;
+        document.getElementById("edit-u-name").value = u.name;
+        document.getElementById("edit-u-pass").value = ""; // لا نعرض كلمة السر القديمة
+        document.getElementById("edit-u-gems").value = u.gems || 0;
+        document.getElementById("edit-u-hidden").checked = u.is_hidden || false;
+
+        // إظهار أرصدة التحديات
+        const balArea = document.getElementById("edit-u-balances");
+        balArea.innerHTML =
+          '<h4 style="color:var(--primary); font-size:0.8rem; margin:10px 0;">أرصدة التحديات:</h4>' +
+          state.challenges
+            .map((c) => {
+              const score = state.progress[u.id + "_" + c.id] || 0;
+              return `
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
+                      <span style="color:var(--text-muted);">${c.title}</span>
+                      <input type="number" class="edit-prog-input" data-cid="${c.id}" value="${score}" style="width:100px; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); color:var(--text); border-radius:8px; padding:6px 10px; text-align:center;">
+                  </div>
+              `;
+            })
+            .join("");
+
+        openModal("m-edit-user");
+      }
+
+      async function saveUserEdit() {
+        const name = document.getElementById("edit-u-name").value.trim();
+        const gems = parseInt(document.getElementById("edit-u-gems").value) || 0;
+        const isHidden = document.getElementById("edit-u-hidden").checked;
+
+        if (!name) return toast("الاسم مطلوب ⚠️");
+
+        toast("جاري حفظ التعديلات... ⏳");
+
+        // 1. تحديث البروفايل
+        const { error: pErr } = await db
+          .from("profiles")
+          .update({
+            name,
+            gems,
+            is_hidden: isHidden,
+          })
+          .eq("id", editingUserId);
+
+        if (pErr) return toast("خطأ في تحديث البيانات ❌");
+
+        // 2. تحديث تقدم التحديات
+        const progInputs = document.querySelectorAll(".edit-prog-input");
+        for (const input of progInputs) {
+          const cid = input.dataset.cid;
+          const score = parseInt(input.value) || 0;
+          const pid = editingUserId + "_" + cid;
+          await db.from("progress").upsert({
+            id: pid,
+            user_id: editingUserId,
+            challenge_id: cid,
+            score: score,
+          });
+          state.progress[pid] = score;
+        }
+
+        toast("تم تحديث بيانات المستخدم بنجاح ✓");
+        closeModal("m-edit-user");
+        load();
+      }
+
+      async function addBadge() {
+        const icon = document.getElementById("nb-icon").value;
+        const title = document.getElementById("nb-title").value;
+        const target = parseInt(document.getElementById("nb-target").value);
+        if (!icon || !title || !target) return alert("أكمل بيانات الوسام");
+        const newBadge = {
+          id: "b" + Date.now(),
+          name: title,
+          icon: icon,
+          target: target,
+        };
+
+        await db.from("badges").insert([newBadge]);
+        state.badges.push(newBadge);
+
+        document.getElementById("nb-icon").value = "";
+        document.getElementById("nb-title").value = "";
+        document.getElementById("nb-target").value = "";
+        save();
+        syncAdmin();
+        toast("تمت إضافة الوسام بنجاح 🏅");
+      }
+      async function deleteBadge(id) {
+        if (!confirm("حذف الوسام؟")) return;
+        await db.from("badges").delete().eq("id", id);
+        state.badges = state.badges.filter((b) => b.id !== id);
+        save();
+        syncAdmin();
+      }
+
+      let editingChallengeId = null;
+      function editChallenge(id) {
+        const c = state.challenges.find((x) => x.id === id);
+        if (!c) return;
+        editingChallengeId = id;
+        document.getElementById("nc-title").value = c.title;
+        document.getElementById("nc-goal").value = c.goal;
+        document.getElementById("nc-active").checked = c.is_active || false;
+        document.getElementById("nc-days").value = c.duration_days || "";
+        document
+          .querySelectorAll(".nu-p")
+          .forEach((cb) => (cb.checked = c.participants.includes(cb.value)));
+        document.getElementById("admin-chal-form-title").innerText =
+          "تعديل التحدي ✏️";
+        document.getElementById("admin-chal-btn").innerText = "تحديث التحدي 💾";
+        document.getElementById("admin-chal-cancel").classList.remove("hidden");
+        document.getElementById("nc-title").focus();
+      }
+      function cancelEditChallenge() {
+        editingChallengeId = null;
+        document.getElementById("nc-title").value = "";
+        document.getElementById("nc-goal").value = "";
+        document.getElementById("nc-days").value = "";
+        document
+          .querySelectorAll(".nu-p")
+          .forEach((cb) => (cb.checked = false));
+        document.getElementById("nc-active").checked = true;
+        document.getElementById("admin-chal-form-title").innerText =
+          "بدء تحدي جديد 🏆";
+        document.getElementById("admin-chal-btn").innerText = "ابدأ التحدي 🔥";
+        document.getElementById("admin-chal-cancel").classList.add("hidden");
+      }
+      async function deleteChallenge(id) {
+        if (
+          !confirm(
+            "هل أنت متأكد من حذف هذا التحدي؟ سيتم حذف جميع السجلات المتعلقة به.",
+          )
+        )
+          return;
+        await db.from("challenges").delete().eq("id", id);
+        state.challenges = state.challenges.filter((c) => c.id !== id);
+        save();
+        syncAdmin();
+        toast("تم حذف التحدي 🗑️");
+      }
+
+      /* ─── UTILS ─── */
+      function addLog(uid, cid, type, amt) {
+        const now = new Date();
+        const d =
+          now.toLocaleDateString("ar-EG") +
+          " " +
+          now.toLocaleTimeString("ar-EG", {
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        state.logs.push({
+          user_id: uid,
+          challenge_id: cid,
+          type: type,
+          amount: amt,
+          date_text: d,
+        });
+      }
+      function ar(n) {
+        return n.toString().replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
+      }
+      function fmt(n) {
+        return ar((n || 0).toLocaleString("en-US"));
+      }
+      function toast(m) {
+        const t = document.getElementById("toast");
+        t.textContent = m;
+        t.style.transform = "translateX(-50%) translateY(0)";
+        setTimeout(
+          () => (t.style.transform = "translateX(-50%) translateY(-100px)"),
+          3000,
+        );
+      }
+      function openModal(id) {
+        document.getElementById(id).style.display = "flex";
+      }
+      function closeModal(id) {
+        document.getElementById(id).style.display = "none";
+      }
+      function applyCustomGoal() {
+        const v = parseInt(document.getElementById("custom-goal-val").value);
+        if (!v || v < 1) return;
+        setG(v);
+        closeModal("m-custom-goal");
+      }
+
+      /* ─── PROFILE + BADGES ─── */
+      function getAvatarHTML(u, size = "70px") {
+        if (u.avatar_url) {
+          return `<div style="width:${size}; height:${size}; border-radius:50%; overflow:hidden; border:2px solid var(--primary);"><img src="${u.avatar_url}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+        }
+        return `<div style="width:${size}; height:${size}; background:var(--primary-dark); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--primary); font-size:${parseInt(size) / 3}px;">${u.name.slice(0, 1)}</div>`;
+      }
+
+      function syncProfile() {
+        const u = state.currentUser;
+        const total = getTotal(u.id);
+        document.getElementById("profile-area-ui").innerHTML = `
+        <div style="position:relative; width:100%; max-width:120px; margin:0 auto 15px;">
+            ${getAvatarHTML(u, "100px")}
+            <button onclick="document.getElementById('avatar-input').click()" style="position:absolute; bottom:0; right:50%; transform:translateX(50px); background:var(--primary); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.5);">📷</button>
+            <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="uploadAvatar(event)">
+        </div>
+        <h2 style="color:var(--primary-light);">${u.name}</h2>
+        <div class="pouch-gem" style="width:fit-content; margin:15px auto;">💎 الماس: ${ar(u.gems || 0)}</div>
+        <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:15px;">إجمالي الاستغفار: ${fmt(total)}</div>
+        <h3 style="color:var(--primary-light); font-size:1rem; margin-bottom:10px;">الأوسمة 🏅</h3>
+        <div class="badge-row">${renderBadgesHTML(u.id)}</div>
+    `;
+      }
+
+      async function uploadAvatar(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        if (file.size > 2 * 1024 * 1024)
+          return toast("حجم الصورة كبير جداً (الأقصى 2MB)");
+
+        toast("جاري الرفع... ⏳");
+        const u = state.currentUser;
+        const fileExt = file.name.split(".").pop();
+        // المسار يجب أن يبدأ بـ ID المستخدم ليتطابق مع سياسة الأمان
+        const filePath = `${u.id}/${Date.now()}.${fileExt}`;
+
+        try {
+          const { error: uploadError } = await db.storage
+            .from("avatars")
+            .upload(filePath, file);
+          if (uploadError) throw uploadError;
+
+          const {
+            data: { publicUrl },
+          } = db.storage.from("avatars").getPublicUrl(filePath);
+
+          const { error: updateError } = await db
+            .from("profiles")
+            .update({ avatar_url: publicUrl })
+            .eq("id", u.id);
+          if (updateError) throw updateError;
+
+          state.currentUser.avatar_url = publicUrl;
+          toast("تم تحديث الصورة بنجاح! ✨");
+          syncProfile();
+          syncDash();
+        } catch (err) {
+          console.error("Avatar upload error:", err);
+          const msg = err.message || "خطأ غير معروف";
+          toast(`خطأ: ${msg} ❌`);
+        }
+      }
+      function getUserBadges(uid) {
+        const total = getTotal(uid);
+        const userBadges = state.badges.map((b) => ({
+          ...b,
+          earned: total >= b.target,
+        }));
+        return userBadges;
+      }
+      function renderBadgesHTML(uid) {
+        return getUserBadges(uid)
+          .map(
+            (b) => `
+        <div class="badge-item ${b.earned ? "earned" : "locked"}">
+            <span class="badge-icon">${b.icon}</span>
+            <span class="badge-label">${b.name}<br>${fmt(b.target)}</span>
+        </div>
+    `,
+          )
+          .join("");
+      }
+      function getEarnedBadgeIcons(uid) {
+        return getUserBadges(uid)
+          .filter((b) => b.earned)
+          .map((b) => b.icon)
+          .join(" ");
+      }
+
+      /* ─── HONOR BOARD ─── */
+      function syncHonor() {
+        const sorted = state.users
+          .filter((u) => !u.is_hidden)
+          .map((u) => ({ ...u, score: getTotal(u.id) }))
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 10);
+        const area = document.getElementById("honor-board-ui");
+        if (!area) return;
+        area.innerHTML =
+          sorted
+            .map((u, i) => {
+              const earnedIcons = getEarnedBadgeIcons(u.id);
+              return `
+        <div class="ranking-row" style="background: rgba(255,255,255,0.02); border-right-color: ${i < 3 ? "var(--fire)" : "var(--primary)"};">
+            <div class="rank-badge" style="font-size:1.4rem;">${i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : ar(i + 1)}</div>
+            <div style="width:40px; height:40px; flex-shrink:0;">${getAvatarHTML(u, "40px")}</div>
+            <div style="flex:1;">
+                <div style="font-weight:700; color:${i === 0 ? "var(--primary-light)" : "var(--text)"};">${u.name}</div>
+                <div style="font-size:0.7rem; letter-spacing:2px;">${earnedIcons || '<span style="color:var(--text-dim); font-size:0.6rem;">لا أوسمة بعد</span>'}</div>
+            </div>
+            <div style="font-family:'Scheherazade New', serif; font-size:1.4rem; color:var(--primary-light);">${fmt(u.score)}</div>
+        </div>
+    `;
+            })
+            .join("") ||
+          '<p style="text-align:center;">لا يوجد بيانات بعد.</p>';
+      }
+
+      /* ─── AUDIO SYSTEM ─── */
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      let audioCtx = null;
+      function ensureAudio() {
+        if (!audioCtx) audioCtx = new AudioCtx();
+      }
+      function playSound(type) {
+        if (!state.soundOn) return;
+        ensureAudio();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        if (type === "tap") {
+          osc.frequency.value = 800;
+          osc.type = "sine";
+          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioCtx.currentTime + 0.08,
+          );
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.08);
+        } else {
+          osc.frequency.value = 523;
+          osc.type = "triangle";
+          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+          osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
+          osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.3);
+          gain.gain.exponentialRampToValueAtTime(
+            0.001,
+            audioCtx.currentTime + 0.5,
+          );
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.5);
+        }
+      }
+      function toggleSound() {
+        state.soundOn = !state.soundOn;
+        save();
+        document.getElementById("sound-toggle-btn").textContent = state.soundOn
+          ? "🔊"
+          : "🔇";
+        toast(state.soundOn ? "الصوت مفعل" : "الصوت موقف");
+      }
+
+      /* ─── PARTICLES ─── */
+      function spawnParticles() {
+        const btn = document.querySelector(".bead-core");
+        if (!btn) return;
+        const rect = btn.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2,
+          cy = rect.top + rect.height / 2;
+        for (let i = 0; i < 6; i++) {
+          const p = document.createElement("div");
+          p.className = "particle";
+          const angle = Math.random() * Math.PI * 2,
+            dist = 40 + Math.random() * 60;
+          const color = ["#ffd700", "#c9943a", "#f5dfa0", "#ff6b35"][
+            Math.floor(Math.random() * 4)
+          ];
+          const size = 4 + Math.random() * 4;
+          p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};--px:${Math.cos(angle) * dist}px;--py:${Math.sin(angle) * dist}px;`;
+          document.body.appendChild(p);
+          setTimeout(() => p.remove(), 1000);
+        }
+      }
+
+      /* ─── AUTO-SAVE SESSION ─── */
+      function autoSaveSess() {
+        sessionStorage.setItem(
+          "_autoSess",
+          JSON.stringify({
+            count: sessCount,
+            chalId: state.currentChallengeId,
+          }),
+        );
+      }
+      function restoreAutoSess() {
+        const d = sessionStorage.getItem("_autoSess");
+        if (d) {
+          const o = JSON.parse(d);
+          sessCount = o.count || 0;
+          if (o.chalId) state.currentChallengeId = o.chalId;
+        }
+      }
+
+      /* ─── LIVE COUNTDOWN ─── */
+      let countdownInterval = null;
+      function startLiveCountdown(endDateStr) {
+        if (countdownInterval) clearInterval(countdownInterval);
+        function update() {
+          const el = document.getElementById("countdown-live");
+          if (!el) {
+            clearInterval(countdownInterval);
+            return;
+          }
+          const diff = new Date(endDateStr) - new Date();
+          if (diff <= 0) {
+            el.innerHTML =
+              '<div class="countdown-bar"><span style="color:var(--danger); font-size:0.85rem;">⏰ انتهى الوقت!</span></div>';
+            clearInterval(countdownInterval);
+            return;
+          }
+          const d = Math.floor(diff / 86400000),
+            h = Math.floor((diff % 86400000) / 3600000),
+            m = Math.floor((diff % 3600000) / 60000),
+            s = Math.floor((diff % 60000) / 1000);
+          el.innerHTML = `<div class="countdown-bar"><span style="font-size:0.8rem; color:var(--text-muted);">⏳ الوقت المتبقي</span><span class="countdown-val">${ar(d)} يوم ${ar(h)} ساعة ${ar(m)} دقيقة ${ar(s)} ثانية</span></div>`;
+        }
+        update();
+        countdownInterval = setInterval(update, 1000);
+      }
+
+      /* ─── DAILY MSG ─── */
+      async function saveDailyMsg() {
+        state.dailyMsg = document.getElementById("admin-daily-msg").value;
+        await db
+          .from("app_settings")
+          .upsert({ key: "daily_msg", value: state.dailyMsg });
+        save();
+        toast("تم نشر الرسالة ");
+        syncDash();
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (
+          (e.code === "Space" || e.code === "Enter") &&
+          document.getElementById("s-tasbih").classList.contains("active")
+        ) {
+          e.preventDefault();
+          tapSubha();
+        }
+      });
+      restoreAutoSess();
+      load();
+      if (state.soundOn === undefined) state.soundOn = true;
+    </script>
+  </body>
 </html>
