@@ -1369,10 +1369,11 @@
           subGoal: state.subGoal,
           soundOn: state.soundOn,
           pendingActions: state.pendingActions,
-          myProgress: myProgress,
+          progress: state.progress, // حفظ كافة التقدم (للترتيب الأوفلاين)
           myLogs: myLogs,
-          challenges: state.challenges, // حفظ التحديات للأوفلاين
-          users: state.users // حفظ الملفات العامة للمستخدمين للأوفلاين
+          challenges: state.challenges,
+          users: state.users,
+          badges: state.badges // حفظ الأوسمة
         };
 
         localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
@@ -1404,9 +1405,18 @@
               if (parsed.users) {
                 state.users = parsed.users;
               }
+              if (parsed.progress) {
+                state.progress = parsed.progress;
+              }
+              if (parsed.badges) {
+                state.badges = parsed.badges;
+              }
 
               // إذا كان المستخدم مسجلاً، اذهب للرئيسية فوراً
               go("s-dash");
+              syncHonor(); // عرض لوحة الشرف
+              syncProfile(); // عرض البروفايل
+              syncBadges(); // عرض الأوسمة
             }
           } catch (e) {
             console.error("Local load failed:", e);
