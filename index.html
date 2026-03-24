@@ -1318,10 +1318,39 @@
         pendingActions: [],
       };
       let deferredPrompt;
+      let syncLockPromise = null;
+      let realtimeChannel = null;
 
       function save() {
-        // لم نعد بحاجة لـ localStorage للحفظ الكلي، سنقوم بالحفظ المباشر لكل عملية.
-        localStorage.setItem("million_v19_offline", JSON.stringify(state));
+        if (!state.currentUser) {
+          localStorage.removeItem("million_v19_offline");
+          return;
+        }
+
+        const myId = state.currentUser.id;
+        
+        // تصفية التقدم ليشمل فقط السجلات الخاصة بالمستخدم الحالي لضمان الخصوصية
+        const myProgress = {};
+        for (const k in state.progress) {
+          if (k.startsWith(myId + "_")) {
+            myProgress[k] = state.progress[k];
+          }
+        }
+
+        // تصفية السجلات لتشمل فقط السجلات الخاصة بالمستخدم الحالي
+        const myLogs = state.logs.filter(l => (l.userId === myId || l.user_id === myId));
+
+        const saveData = {
+          currentUser: state.currentUser,
+          currentChallengeId: state.currentChallengeId,
+          subGoal: state.subGoal,
+          soundOn: state.soundOn,
+          pendingActions: state.pendingActions,
+          myProgress: myProgress,
+          myLogs: myLogs
+        };
+
+        localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
       }
       async function load() {
         // تحميل فوري من التخزين المحلي لسرعة الفتح (الأوفلاين أولاً)
@@ -1329,10 +1358,28 @@
         if (localData) {
           try {
             const parsed = JSON.parse(localData);
-            state = { ...state, ...parsed };
-            // إذا كان المستخدم مسجلاً، اذهب للرئيسية فوراً
-            if (state.currentUser) go("s-dash");
-          } catch (e) {}
+            
+            // استعادة البيانات مع مراعاة الهيكلة الجديدة (للمستخدم الحالي فقط)
+            if (parsed.currentUser) {
+              state.currentUser = parsed.currentUser;
+              state.currentChallengeId = parsed.currentChallengeId || "";
+              state.subGoal = parsed.subGoal || 33;
+              state.soundOn = (parsed.soundOn !== undefined) ? parsed.soundOn : true;
+              state.pendingActions = parsed.pendingActions || [];
+              
+              if (parsed.myProgress) {
+                state.progress = { ...parsed.myProgress };
+              }
+              if (parsed.myLogs) {
+                state.logs = parsed.myLogs;
+              }
+
+              // إذا كان المستخدم مسجلاً، اذهب للرئيسية فوراً
+              go("s-dash");
+            }
+          } catch (e) {
+            console.error("Local load failed:", e);
+          }
         }
 
         if (!navigator.onLine) {
@@ -1346,12 +1393,21 @@
           const {
             data: { session },
           } = await db.auth.getSession();
+          const myId = session?.user?.id;
 
-          // تحديد الأعمدة المطلوبة بدلاً من جلب كل شيء للمحافظة على الأمان
-          const publicProfileColumns =
-            "id, name, avatar_url, gems, is_hidden, is_admin";
+          // 1. جلب بيانات المستخدم الحالي بالكامل أولاً لمعرفة الصلاحيات وملء البيانات الشخصية
+          let myProfile = null;
+          if (myId) {
+            const { data } = await db.from("profiles").select("*").eq("id", myId).single();
+            myProfile = data;
+          }
+
+          const isAdmin = myProfile?.is_admin || false;
+          // للمدير: كل الأعمدة. للمستخدم العادي: أعمدة الهوية فقط (الاسم والأفاتار) للآخرين.
+          const profileCols = isAdmin ? "*" : "id, name, avatar_url";
+
           const [u, c, p, b, s] = await Promise.all([
-            db.from("profiles").select(publicProfileColumns),
+            db.from("profiles").select(profileCols),
             db
               .from("challenges")
               .select("id, title, goal, is_active, participants, end_date"),
@@ -1360,17 +1416,24 @@
             db.from("app_settings").select("key, value"),
           ]);
 
-          const myId = session?.user?.id;
           if (u.data) {
-            // Keep local gems if we have pending actions to avoid losing them on load
+            // المحافظة على رصيد الماس المحلي إذا كان هناك عمليات معلقة (قبل تحديث المصفوفة)
             if (myId && state.pendingActions.length > 0) {
               const localMe = state.users.find((ux) => ux.id === myId);
-              if (localMe) {
-                const serverMe = u.data.find((ux) => ux.id === myId);
-                if (serverMe) serverMe.gems = localMe.gems;
+              if (localMe && myProfile) {
+                myProfile.gems = localMe.gems;
               }
             }
             state.users = u.data;
+            // دمج الملف الشخصي الكامل للمستخدم الحالي إذا لم يكن مديراً
+            if (myProfile && !isAdmin) {
+              const myIdx = state.users.findIndex(ux => ux.id === myId);
+              if (myIdx !== -1) {
+                state.users[myIdx] = { ...state.users[myIdx], ...myProfile };
+              } else {
+                state.users.push(myProfile);
+              }
+            }
           }
           if (c.data) state.challenges = c.data;
           if (p.data) {
@@ -1420,7 +1483,6 @@
               }
 
               save(); // حفظ النسخة الجديدة محلياً
-              syncPending(); // محاولة مزامنة أي عمل سابق معلق
               go("s-dash");
             } else {
               setTimeout(load, 2000);
@@ -1437,7 +1499,9 @@
 
       // مراقبة تغييرات حالة الدخول
       db.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN") load();
+        if (event === "SIGNED_IN") {
+          load().then(() => { if (navigator.onLine) syncPending(); });
+        }
         if (event === "SIGNED_OUT") {
           state.currentUser = null;
           go("s-login");
@@ -1466,11 +1530,10 @@
       }
 
       async function handleLogout() {
-        if (!navigator.onLine) {
-          return toast("يجب أن تكون متصلاً بالإنترنت لتسجيل الخروج ⚠️");
+        if (navigator.onLine) {
+           await db.auth.signOut();
         }
-        await db.auth.signOut();
-        // مسح بيانات الجلسة من التخزين المحلي
+        // مسح بيانات الجلسة من التخزين المحلي فوراً (يعمل أوفلاين)
         localStorage.removeItem("million_v19_offline");
         location.reload();
       }
@@ -1527,8 +1590,9 @@
       }
 
       function setupRealtime() {
+        if (realtimeChannel) return; // منع تكرار الاشتراك
         // الاستماع لكل التغييرات في الجداول الأساسية
-        db.channel("public:all")
+        realtimeChannel = db.channel("public:all")
           .on(
             "postgres_changes",
             { event: "*", schema: "public", table: "progress" },
@@ -1732,7 +1796,7 @@
             // Logic for hidden users: Admin sees everyone, users see themselves, else hide if u.isHidden
             if (state.currentUser.is_admin) return true;
             if (u.id === state.currentUser.id) return true;
-            return u.is_hidden === false;
+            return u.is_hidden !== true;
           })
           .map((u) => ({
             ...u,
@@ -1911,7 +1975,10 @@
         const nG = Math.floor(newScore / 500) - Math.floor(oldScore / 500);
         if (nG > 0) state.currentUser.gems = (state.currentUser.gems || 0) + nG;
 
+        const actId = 'act_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+        
         state.logs.unshift({
+          id: actId,
           userId: state.currentUser.id,
           challengeId: state.currentChallengeId,
           type: "subha",
@@ -1922,10 +1989,12 @@
 
         // إضافة للـ Queue للمزامنة لاحقاً
         state.pendingActions.push({
+          id: actId,
           type: "save",
           amount,
           cid: state.currentChallengeId,
           dateText,
+          timestamp: Date.now()
         });
 
         sessCount = 0;
@@ -1975,7 +2044,10 @@
         const newScore = oldScore + v;
         state.progress[k] = newScore;
 
+        const actId = 'act_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
         state.logs.unshift({
+          id: actId,
           userId: state.currentUser.id,
           challengeId: state.currentChallengeId,
           type: "manual",
@@ -1985,10 +2057,12 @@
         });
 
         state.pendingActions.push({
+          id: actId,
           type: "manual",
           amount: v,
           cid: state.currentChallengeId,
           dateText,
+          timestamp: Date.now()
         });
 
         save();
@@ -2652,59 +2726,89 @@
         }
       });
       restoreAutoSess();
-      load();
+      load().then(() => { if (navigator.onLine) syncPending(); });
       async function syncPending() {
         if (!navigator.onLine || state.pendingActions.length === 0) return;
-        if (state.isSyncing) return;
-        state.isSyncing = true;
-        syncDash(); // تحديث أيقونة السحاب
+        
+        // منع التشغيل المتوازي (Race Condition)
+        if (state.isSyncing || syncLockPromise) return syncLockPromise;
 
-        try {
-          while (state.pendingActions.length > 0) {
-            const act = state.pendingActions[0];
-            const k = state.currentUser.id + "_" + act.cid;
+        syncLockPromise = (async () => {
+          state.isSyncing = true;
+          syncDash(); // تحديث أيقونة السحاب
 
-            // 1. إضافة السجل
-            await db.from("logs").insert([
-              {
+          try {
+            while (state.pendingActions.length > 0) {
+              const act = state.pendingActions[0];
+              
+              // التحقق من صلاحية المحاولة (تجنب العمليات المتكررة جداً)
+              if (act.lastTry && Date.now() - act.lastTry < 5000) {
+                 break; 
+              }
+              act.lastTry = Date.now();
+
+              const k = state.currentUser.id + "_" + act.cid;
+
+              // 1. إضافة السجل
+              await db.from("logs").insert([
+                {
+                  user_id: state.currentUser.id,
+                  challenge_id: act.cid,
+                  type: act.type === "save" ? "subha" : "manual",
+                  amount: act.amount,
+                  date_text: act.dateText,
+                },
+              ]);
+
+              // 2. تحديث الإجمالي (Upsert)
+              const latestScore = state.progress[k];
+              await db.from("progress").upsert({
+                id: k,
                 user_id: state.currentUser.id,
                 challenge_id: act.cid,
-                type: act.type === "save" ? "subha" : "manual",
-                amount: act.amount,
-                date_text: act.dateText,
-              },
-            ]);
+                score: latestScore,
+              });
 
-            // 2. تحديث الإجمالي (Upsert)
-            // نستخدم القيمة الحالية من الـ State لأنها الأحدث
-            const latestScore = state.progress[k];
-            await db.from("progress").upsert({
-              id: k,
-              user_id: state.currentUser.id,
-              challenge_id: act.cid,
-              score: latestScore,
-            });
+              // 3. تحديث الألماس
+              await db
+                .from("profiles")
+                .update({ gems: state.currentUser.gems })
+                .eq("id", state.currentUser.id);
 
-            // 3. تحديث الألماس
-            await db
-              .from("profiles")
-              .update({ gems: state.currentUser.gems })
-              .eq("id", state.currentUser.id);
-
-            // تم بنجاح، نحذفه من القائمة وتحديث حالة السجل
-            const syncedAction = state.pendingActions[0];
-            const logItem = state.logs.find((l) => l.is_pending && l.amount === syncedAction.amount && l.date === syncedAction.dateText);
-            if (logItem) delete logItem.is_pending;
+              // تم بنجاح، نحذفه من القائمة وتحديث حالة السجل المحلي
+              const syncedActionId = state.pendingActions[0].id;
+              const logItem = state.logs.find((l) => l.is_pending && l.id === syncedActionId);
+              if (logItem) delete logItem.is_pending;
+              
+              state.pendingActions.shift();
+              save();
+            }
+          } catch (e) {
+            console.error("Sync error:", e);
             
-            state.pendingActions.shift();
-            save();
+            // إضافة منطق إعادة المحاولة بذكاء
+            if (state.pendingActions.length > 0) {
+              const currentAct = state.pendingActions[0];
+              currentAct.retryCount = (currentAct.retryCount || 0) + 1;
+              
+              if (currentAct.retryCount >= 3) {
+                 toast("فشل مزامنة بعض البيانات بعد 3 محاولات ⚠️");
+                 state.pendingActions.shift(); // تجاوز هذه العملية لتجنب الحظر الكامل
+                 save();
+              } else {
+                 toast(`فشل المزامنة.. سنحاول مرة أخرى قريباً (محاولة ${currentAct.retryCount})`);
+              }
+            }
+          } finally {
+            state.isSyncing = false;
+            syncDash();
           }
-          toast("تمت المزامنة مع السحاب بنجاح ☁️✓");
-        } catch (e) {
-          console.error("Sync error:", e);
+        })();
+
+        try {
+          await syncLockPromise;
         } finally {
-          state.isSyncing = false;
-          syncDash();
+          syncLockPromise = null;
         }
       }
 

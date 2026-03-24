@@ -15,8 +15,17 @@ self.addEventListener('install', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-    // استراتيجية: الشبكة أولاً مع الرجوع للتخزين المؤقت عند الفشل
+    const url = new URL(e.request.url);
+
+    // استثناء طلبات Supabase من التخزين بـ API - اتركها للشبكة دائماً
+    if (url.hostname.includes('supabase.co')) {
+        return; // العودة للسلوك الافتراضي للمتصفح (الشبكة فقط)
+    }
+
+    // استراتيجية التخزين أولاً للأصول الثابتة (Static Assets)
     e.respondWith(
-        fetch(e.request).catch(() => caches.match(e.request))
+        caches.match(e.request).then((response) => {
+            return response || fetch(e.request);
+        })
     );
 });

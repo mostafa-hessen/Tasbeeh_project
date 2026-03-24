@@ -14,9 +14,13 @@ CREATE POLICY "المدير فقط يتحكم بالتحديات" ON challenges 
 USING ( (SELECT is_admin FROM profiles WHERE id = auth.uid()) = true );
 
 
--- 3. سياسة الأمان للحسابات الشخصية (Profiles)
--- الجميع يرى الملفات العامة
-CREATE POLICY "رؤية الملفات الشخصية" ON profiles FOR SELECT USING (true);
+-- الجميع يرى الملفات العامة (الاسم والأفاتار) للأعضاء غير المخفيين
+CREATE POLICY "رؤية الملفات الشخصية" ON profiles FOR SELECT 
+USING (
+    is_hidden = false OR 
+    auth.uid() = id OR 
+    (SELECT is_admin FROM profiles WHERE id = auth.uid()) = true
+);
 -- المستخدم يعدل بياناته أو المدير يعدل للكل
 CREATE POLICY "تعديل الملف الشخصي" ON profiles FOR UPDATE
 USING ( auth.uid() = id OR (SELECT is_admin FROM profiles WHERE id = auth.uid()) = true );
