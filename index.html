@@ -1373,7 +1373,7 @@
           myLogs: myLogs,
           challenges: state.challenges,
           users: state.users,
-          badges: state.badges // حفظ الأوسمة
+          badges: state.badges 
         };
 
         localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
@@ -1815,7 +1815,7 @@
         // Switch Challenges Chips
         const userChallenges = state.challenges.filter(
           (c) =>
-            c.participants.includes(state.currentUser.id) &&
+            (c.participants && Array.isArray(c.participants) && c.participants.includes(state.currentUser.id)) &&
             (c.is_active || state.currentUser.is_admin),
         );
         const chips = document.getElementById("dash-chips-area");
@@ -1841,11 +1841,11 @@
         const cur = state.challenges.find(
           (x) =>
             x.id === state.currentChallengeId &&
-            (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin),
+            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || state.currentUser.is_admin),
         );
         
-        // إذا لم نجد التحدي المحفوظ، نأخذ أول تحدي متاح يشارك فيه المستخدم
-        const activeChal = cur || userChallenges[0];
+        // إذا لم نجد التحدي المحفوظ، نأخذ أول تحدي متاح يشارك فيه المستخدم (أو يراه المدير)
+        const activeChal = cur || (state.currentUser.is_admin ? state.challenges.find(c => c.is_active || state.currentUser.is_admin) : userChallenges[0]);
 
         if (activeChal) {
           state.currentChallengeId = activeChal.id;
@@ -1884,7 +1884,7 @@
       }
       function renderRanks(chal) {
         const list = state.users
-          .filter((u) => chal.participants.includes(u.id) || u.id === state.currentUser.id)
+          .filter((u) => (chal.participants && Array.isArray(chal.participants) && chal.participants.includes(u.id)) || u.id === state.currentUser.id)
           .filter((u) => {
             // Logic for hidden users: Admin sees everyone, users see themselves, else hide if u.isHidden
             if (state.currentUser.is_admin) return true;
