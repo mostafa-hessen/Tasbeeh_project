@@ -1496,19 +1496,22 @@
           if (p.data) {
             // ملاحظة هامة: لا تصفّر الكائن بالكامل لتجنب تصفير الأرصدة المحلية غير المرفوعة
             p.data.forEach((item) => {
-                // إذا كان الرصيد في السيرفر أكبر أو المحلي مفقود، نقوم بالتحديث
-                // هذا يحمي من الـ Race Condition في حال كان اليوزر سجل أوفلاين ولم ترفع بعد
-                state.progress[item.id] = item.score;
+                // استخدام مفتاح موحد (user_id_challenge_id) لضمان التوافق مع الهيكلة الحالية
+                const key = item.user_id + "_" + item.challenge_id;
+                // تحديث القيمة من السيرفر فقط (مرجع أساسي)
+                state.progress[key] = item.score;
+                // دعم للمفاتيح القديمة إذا وجدت في السيرفر
+                if (item.id && item.id !== key) state.progress[item.id] = item.score;
             });
-            
-            // تطبيق العمليات المعلقة فوق بيانات السيرفر لضمان دقة الرقم المعروض
-            if (myId) {
-              state.pendingActions.forEach((act) => {
-                const k = myId + "_" + act.cid;
-                // هنا نضيف فقط ما لم يتم مزامنته بعد لمحاكاة التراكم
-                state.progress[k] = (state.progress[k] || 0) + act.amount;
-              });
-            }
+          }
+
+          // تطبيق العمليات المعلقة فوق بيانات السيرفر لضمان دقة الرقم المعروض
+          if (myId) {
+            state.pendingActions.forEach((act) => {
+              const k = myId + "_" + act.cid;
+              // هنا نضيف فقط ما لم يتم مزامنته بعد لمحاكاة التراكم فوق بيانات السيرفر الحالية
+              state.progress[k] = (state.progress[k] || 0) + act.amount;
+            });
           }
           if (b.data) state.badges = b.data;
           if (s.data) {
@@ -2900,14 +2903,20 @@
                 },
               ]);
 
-              // 2. تحديث الإجمالي (Upsert)
-              const latestScore = state.progress[k];
+              // 2. تحديث الإجمالي (Upsert) - جلب الرصيد الحالي من السيرفر أولاً لتجنب حك (Overwrite) الأرصدة القديمة
+              const { data: currentSrv } = await db.from("progress").select("score").eq("id", k).single();
+              const serverBase = currentSrv ? currentSrv.score : 0;
+              const newTotal = serverBase + act.amount;
+              
               await db.from("progress").upsert({
                 id: k,
                 user_id: state.currentUser.id,
                 challenge_id: act.cid,
-                score: latestScore,
+                score: newTotal,
               });
+
+              // مزامنة حالة الألماس (اختياري، يمكن تحسينه)
+              state.progress[k] = newTotal; // تحديث محلي لضمان انسجام الأرقام بعد المزامنة
 
               // 3. تحديث الألماس
               await db
