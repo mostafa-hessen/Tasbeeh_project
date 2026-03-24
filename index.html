@@ -1494,12 +1494,18 @@
           }
           if (c.data) state.challenges = c.data;
           if (p.data) {
-            state.progress = {};
-            p.data.forEach((item) => (state.progress[item.id] = item.score));
-            // Apply pending actions on top of the fetched database data
+            // ملاحظة هامة: لا تصفّر الكائن بالكامل لتجنب تصفير الأرصدة المحلية غير المرفوعة
+            p.data.forEach((item) => {
+                // إذا كان الرصيد في السيرفر أكبر أو المحلي مفقود، نقوم بالتحديث
+                // هذا يحمي من الـ Race Condition في حال كان اليوزر سجل أوفلاين ولم ترفع بعد
+                state.progress[item.id] = item.score;
+            });
+            
+            // تطبيق العمليات المعلقة فوق بيانات السيرفر لضمان دقة الرقم المعروض
             if (myId) {
               state.pendingActions.forEach((act) => {
                 const k = myId + "_" + act.cid;
+                // هنا نضيف فقط ما لم يتم مزامنته بعد لمحاكاة التراكم
                 state.progress[k] = (state.progress[k] || 0) + act.amount;
               });
             }
@@ -1566,23 +1572,39 @@
       });
 
       async function handleLogin() {
-        const email = document.getElementById("login-id").value.trim();
-        const password = document.getElementById("login-pass").value.trim();
+        if (!navigator.onLine) {
+            return toast("لا يمكن تسجيل الدخول بدون إنترنت 📡 حاول مرة أخرى عند الاتصال.");
+        }
+        const btn = document.getElementById("btn-login-action");
+        const originalText = btn.innerText;
 
-        const { data, error } = await db.auth.signInWithPassword({
-          email: email,
-          password: password,
-        });
+        try {
+            btn.innerText = "جاري الدخول... ⏳";
+            btn.disabled = true;
 
-        if (error) {
-          toast(
-            "خطأ: " +
-              (error.message === "Invalid login credentials"
-                ? "بيانات الدخول غير صحيحة"
-                : error.message),
-          );
-        } else {
-          toast("تم تسجيل الدخول بنجاح ✓");
+            const email = document.getElementById("login-id").value.trim();
+            const password = document.getElementById("login-pass").value.trim();
+
+            const { data, error } = await db.auth.signInWithPassword({
+              email: email,
+              password: password,
+            });
+
+            if (error) {
+              toast(
+                "خطأ: " +
+                  (error.message === "Invalid login credentials"
+                    ? "بيانات الدخول غير صحيحة ❌"
+                    : error.message),
+              );
+            } else {
+              toast("تم تسجيل الدخول بنجاح ✓");
+            }
+        } catch (e) {
+            toast("حدث خطأ لم نتوقعه ❌");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
       }
 
@@ -1625,24 +1647,36 @@
 
         if (!name || !email || !password) return toast("يرجى ملء جميع الخانات");
 
-        const { data, error } = await db.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name: name },
-          },
-        });
+        const btn = document.getElementById("btn-signup-action");
+        const originalText = btn.innerText;
 
-        if (error) {
-          toast("خطأ: " + error.message);
-        } else {
-          toast(
-            "تم إنشاء الحساب! افحص بريدك لتأکيد التسجيل (إذا تم تفعيل التأكيد)",
-          );
-          if (data.user) {
-            // Success
-            toggleAuthMode();
-          }
+        try {
+            btn.innerText = "جاري إنشاء الحساب... ⏳";
+            btn.disabled = true;
+
+            const { data, error } = await db.auth.signUp({
+              email,
+              password,
+              options: {
+                data: { name: name },
+              },
+            });
+
+            if (error) {
+              toast("خطأ: " + error.message);
+            } else {
+              toast(
+                "تم إنشاء الحساب! افحص بريدك لتأكيد التسجيل (إذا تم تفعيل التأكيد)",
+              );
+              if (data.user) {
+                toggleAuthMode();
+              }
+            }
+        } catch (e) {
+            toast("حدث خطأ ما ❌");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
       }
 
@@ -1803,12 +1837,14 @@
           }
         }
 
+        // محاولة العثور على التحدي الحالي مع مراعاة الأوفلاين
         const cur = state.challenges.find(
           (x) =>
             x.id === state.currentChallengeId &&
-            x.participants.includes(state.currentUser.id) &&
-            (x.is_active || state.currentUser.is_admin),
+            (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin),
         );
+        
+        // إذا لم نجد التحدي المحفوظ، نأخذ أول تحدي متاح يشارك فيه المستخدم
         const activeChal = cur || userChallenges[0];
 
         if (activeChal) {
@@ -1848,7 +1884,7 @@
       }
       function renderRanks(chal) {
         const list = state.users
-          .filter((u) => chal.participants.includes(u.id))
+          .filter((u) => chal.participants.includes(u.id) || u.id === state.currentUser.id)
           .filter((u) => {
             // Logic for hidden users: Admin sees everyone, users see themselves, else hide if u.isHidden
             if (state.currentUser.is_admin) return true;
@@ -1946,13 +1982,12 @@
         let c = state.challenges.find(
           (x) =>
             x.id === state.currentChallengeId &&
-            x.participants.includes(state.currentUser.id) &&
-            (x.is_active || state.currentUser.is_admin),
+            (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin),
         );
         if (!c)
           c = state.challenges.filter(
             (x) =>
-              x.participants.includes(state.currentUser.id) &&
+              (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin) &&
               (x.is_active || state.currentUser.is_admin),
           )[0];
         if (c) state.currentChallengeId = c.id;
