@@ -588,6 +588,29 @@
         opacity: 0.6;
         z-index: 10;
       }
+
+      /* SKELETON LOADING EFFECT */
+      .skeleton {
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.03) 25%,
+          rgba(255, 255, 255, 0.08) 50%,
+          rgba(255, 255, 255, 0.03) 75%
+        );
+        background-size: 200% 100%;
+        animation: skeleton-loading 1.5s infinite linear;
+        border-radius: 12px;
+        border: none !important;
+        color: transparent !important;
+        pointer-events: none;
+      }
+      .skeleton * {
+        visibility: hidden !important;
+      }
+      @keyframes skeleton-loading {
+        from { background-position: 200% 0; }
+        to { background-position: -200% 0; }
+      }
     </style>
   </head>
   <body>
@@ -1386,6 +1409,11 @@
           toast("تعمل الآن في وضع الأوفلاين 📡 (المميزات المتقدمة تحتاج لإنترنت)");
           if (!state.currentUser) go("s-login");
           return;
+        }
+
+        // إظهار واجهات الانتظار (Skeleton) أثناء جلب البيانات
+        if (state.currentUser) {
+            showSkeletons();
         }
 
         // محاولة جلب البيانات من Supabase لتحديث الواجهة
@@ -2432,6 +2460,46 @@
         if (!v || v < 1) return;
         setG(v);
         closeModal("m-custom-goal");
+      }
+
+      function showSkeletons() {
+        const currentScreen = document.querySelector(".screen.active")?.id;
+        if (currentScreen !== "s-dash") return;
+
+        const h = document.getElementById("dash-header");
+        if (h) h.innerHTML = `
+          <div style="display:flex; align-items:center; gap:12px; width:100%;">
+            <div class="skeleton" style="width:48px; height:48px; border-radius:50%;"></div>
+            <div style="flex:1;">
+               <div class="skeleton" style="width:120px; height:16px; margin-bottom:8px;"></div>
+               <div class="skeleton" style="width:60px; height:12px;"></div>
+            </div>
+            <div class="skeleton" style="width:80px; height:32px; border-radius:16px;"></div>
+          </div>
+        `;
+        const hero = document.getElementById("hero-card-v3-area");
+        if (hero) hero.innerHTML = `
+          <div class="hero-card-v3" style="opacity:0.4;">
+            <div class="skeleton" style="width:100px; height:100px; border-radius:50%;"></div>
+            <div style="flex:1;">
+               <div class="skeleton" style="width:150px; height:20px; margin-bottom:15px;"></div>
+               <div class="skeleton" style="width:100%; height:14px; margin-bottom:10px;"></div>
+               <div class="skeleton" style="width:80%; height:14px;"></div>
+            </div>
+          </div>
+        `;
+        const ranks = document.getElementById("rankings-area-ui");
+        if (ranks) ranks.innerHTML = Array(3).fill(0).map(() => `
+          <div class="ranking-row" style="opacity:0.3;">
+            <div class="skeleton" style="width:44px; height:44px; border-radius:14px;"></div>
+            <div class="skeleton" style="width:40px; height:40px; border-radius:50%;"></div>
+            <div style="flex:1;">
+               <div class="skeleton" style="width:100px; height:16px; margin-bottom:8px;"></div>
+               <div class="skeleton" style="width:60px; height:10px;"></div>
+            </div>
+            <div class="skeleton" style="width:50px; height:20px;"></div>
+          </div>
+        `).join("");
       }
 
       /* ─── PROFILE + BADGES ─── */
