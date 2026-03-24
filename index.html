@@ -1370,7 +1370,9 @@
           soundOn: state.soundOn,
           pendingActions: state.pendingActions,
           myProgress: myProgress,
-          myLogs: myLogs
+          myLogs: myLogs,
+          challenges: state.challenges, // حفظ التحديات للأوفلاين
+          users: state.users // حفظ الملفات العامة للمستخدمين للأوفلاين
         };
 
         localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
@@ -1396,6 +1398,12 @@
               if (parsed.myLogs) {
                 state.logs = parsed.myLogs;
               }
+              if (parsed.challenges) {
+                state.challenges = parsed.challenges;
+              }
+              if (parsed.users) {
+                state.users = parsed.users;
+              }
 
               // إذا كان المستخدم مسجلاً، اذهب للرئيسية فوراً
               go("s-dash");
@@ -1413,7 +1421,13 @@
 
         // إظهار واجهات الانتظار (Skeleton) أثناء جلب البيانات
         if (state.currentUser) {
-            showSkeletons();
+            // إذا كان لدينا بيانات كاش، نعرضها بدلاً من السكيلتون لسرعة الاستجابة
+            if (state.challenges.length > 0) {
+                syncDash();
+                syncTasbih();
+            } else {
+                showSkeletons();
+            }
         }
 
         // محاولة جلب البيانات من Supabase لتحديث الواجهة
@@ -1901,6 +1915,14 @@
               })
               .join("")
           : '<p style="text-align:center; opacity:0.6;">لا توجد عمليات مسجلة بعد.</p>';
+      }
+
+      function switchChallenge(id) {
+        state.currentChallengeId = id;
+        save();
+        syncDash();
+        syncTasbih();
+        toast("تم التبديل بنجاح 🔄");
       }
 
       /* ─── TASBIH & SAVE ─── */
