@@ -1393,9 +1393,13 @@
               state.soundOn = (parsed.soundOn !== undefined) ? parsed.soundOn : true;
               state.pendingActions = parsed.pendingActions || [];
               
-              if (parsed.myProgress) {
+              // استعادة التقدم (دعم للهيكلتين لضمان عدم ضياع البيانات)
+              if (parsed.progress) {
+                state.progress = { ...parsed.progress };
+              } else if (parsed.myProgress) {
                 state.progress = { ...parsed.myProgress };
               }
+
               if (parsed.myLogs) {
                 state.logs = parsed.myLogs;
               }
@@ -1405,18 +1409,19 @@
               if (parsed.users) {
                 state.users = parsed.users;
               }
-              if (parsed.progress) {
-                state.progress = parsed.progress;
-              }
               if (parsed.badges) {
                 state.badges = parsed.badges;
               }
 
-              // إذا كان المستخدم مسجلاً، اذهب للرئيسية فوراً
+              // عرض الواجهة فوراً من الكاش قبل أي محاولة اتصال
+              syncDash();
+              syncTasbih();
+              syncHonor();
+              syncProfile();
+              syncBadges();
+              
+              // الانتقال للرئيسية
               go("s-dash");
-              syncHonor(); // عرض لوحة الشرف
-              syncProfile(); // عرض البروفايل
-              syncBadges(); // عرض الأوسمة
             }
           } catch (e) {
             console.error("Local load failed:", e);
