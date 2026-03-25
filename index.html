@@ -614,6 +614,16 @@
     </style>
   </head>
   <body>
+    <!-- شاشة منع التصفح أوفلاين -->
+    <div id="offline-screen" class="overlay-mask" style="display: none; flex-direction: column; text-align: center; background: rgba(6, 6, 12, 0.98); opacity: 1;">
+      <div class="modal-win" style="max-width: 400px; border-color: var(--danger);">
+        <div style="font-size: 5rem; margin-bottom: 20px;">🌐</div>
+        <h2 style="color: var(--primary); margin-bottom: 15px;">لا يوجد اتصال بالإنترنت</h2>
+        <p style="color: var(--text-muted); margin-bottom: 25px;">عذراً، يجب أن تكون متصلاً بالإنترنت لاستخدام تطبيق مليون استغفار. يرجى التحقق من الشبكة والمحاولة مرة أخرى.</p>
+        <button class="btn-royal" onclick="window.location.reload()">تحديث الصفحة 🔄</button>
+      </div>
+    </div>
+
     <div
       id="toast"
       style="
@@ -1429,8 +1439,7 @@
         }
 
         if (!navigator.onLine) {
-          toast("تعمل الآن في وضع الأوفلاين 📡 (المميزات المتقدمة تحتاج لإنترنت)");
-          if (!state.currentUser) go("s-login");
+          document.getElementById("offline-screen").style.display = "flex";
           return;
         }
 
@@ -1817,9 +1826,13 @@
 
         // Switch Challenges Chips
         const userChallenges = state.challenges.filter(
-          (c) =>
-            (c.participants && Array.isArray(c.participants) && c.participants.includes(state.currentUser.id)) &&
-            (c.is_active || state.currentUser.is_admin),
+          (c) => {
+            const isParticipant = (c.participants && Array.isArray(c.participants) && c.participants.includes(state.currentUser.id));
+            const hasProgress = state.progress && (state.progress[`${state.currentUser.id}_${c.id}`] > 0);
+            const canSee = isParticipant || hasProgress;
+            // في وضع الأوفلاين، نعرض أي تحدي شارك فيه المستخدم سابقاً أو لديه فيه تقدم
+            return canSee && (c.is_active || state.currentUser.is_admin || !navigator.onLine);
+          }
         );
         const chips = document.getElementById("dash-chips-area");
         if (chips) {
@@ -1844,11 +1857,18 @@
         const cur = state.challenges.find(
           (x) =>
             x.id === state.currentChallengeId &&
-            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || state.currentUser.is_admin),
+            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
+             state.currentUser.is_admin || 
+             (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)),
         );
         
         // إذا لم نجد التحدي المحفوظ، نأخذ أول تحدي متاح يشارك فيه المستخدم (أو يراه المدير)
-        const activeChal = cur || (state.currentUser.is_admin ? state.challenges.find(c => c.is_active || state.currentUser.is_admin) : userChallenges[0]);
+        let activeChal = cur || (state.currentUser.is_admin ? state.challenges.find(c => c.is_active || state.currentUser.is_admin) : userChallenges[0]);
+
+        // ضمان العثور على أي تحدي متاح في وضع الأوفلاين إذا فشلت البحث عن النشط
+        if (!activeChal && !navigator.onLine && state.challenges.length > 0) {
+            activeChal = state.challenges.find(c => state.progress && state.progress[`${state.currentUser.id}_${c.id}`] > 0) || state.challenges[0];
+        }
 
         if (activeChal) {
           state.currentChallengeId = activeChal.id;
@@ -1985,13 +2005,17 @@
         let c = state.challenges.find(
           (x) =>
             x.id === state.currentChallengeId &&
-            (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin),
+            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
+             state.currentUser.is_admin ||
+             (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)),
         );
         if (!c)
           c = state.challenges.filter(
             (x) =>
-              (x.participants.includes(state.currentUser.id) || state.currentUser.is_admin) &&
-              (x.is_active || state.currentUser.is_admin),
+              ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
+               state.currentUser.is_admin ||
+               (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)) &&
+              (x.is_active || state.currentUser.is_admin || !navigator.onLine),
           )[0];
         if (c) state.currentChallengeId = c.id;
 
@@ -2963,13 +2987,19 @@
 
       // مراقبة الاتصال
       window.addEventListener("online", () => {
+        document.getElementById("offline-screen").style.display = "none";
         toast("تم استعادة الاتصال 📶");
         syncPending();
       });
       window.addEventListener("offline", () => {
-        toast("انقطع الاتصال.. ستعمل محلياً 📡");
-        syncDash();
+        document.getElementById("offline-screen").style.display = "flex";
+        toast("انقطع الاتصال.. يجب الاتصال بالإنترنت 📡");
       });
+
+      // التحقق الأولي من الاتصال
+      if (!navigator.onLine) {
+        document.getElementById("offline-screen").style.display = "flex";
+      }
 
       if (state.soundOn === undefined) state.soundOn = true;
       // تسجيل الـ Service Worker لتمكين تثبيت التطبيق
