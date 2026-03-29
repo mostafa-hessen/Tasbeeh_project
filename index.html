@@ -4,3041 +4,806 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
     />
-    <title>مليون استغفار - الإدارة والسجلات</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>مليون استغفار | السبحة الذكية</title>
+
+    <!-- PWA & SEO -->
+    <meta name="theme-color" content="#06060c" />
+    <meta name="description" content="تطبيق سبحة ذكية وتحديات استغفار جماعية" />
+    <link rel="manifest" href="manifest.json" />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap"
+      rel="icon"
+      href="https://via.placeholder.com/192/c9943a/000000?text=📿"
+    />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Scheherazade+New:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="manifest" href="manifest.json" />
-    <meta name="theme-color" content="#c9943a" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="app_icon_1774282580592.png" />
-    <link rel="icon" type="image/png" href="app_icon_1774282580592.png" />
-    <style>
-      /* ─────────────────────────────────────────────────────────────────────────────
-   DESIGN SYSTEM
-   ───────────────────────────────────────────────────────────────────────────── */
-      :root {
-        --primary: #c9943a;
-        --primary-light: #f5dfa0;
-        --primary-dark: #6e4c1a;
-        --bg: #06060c;
-        --card-bg: #0e0e1a;
-        --text: #f0e8d0;
-        --text-muted: #a09070;
-        --text-dim: #605040;
-        --accent: #2d9e5f;
-        --danger: #c43a3a;
-        --diamond: #4bc0c8;
-        --fire: #ff6b35;
-        --glow: rgba(201, 148, 58, 0.4);
-        --radius: 28px;
-        --glass: rgba(14, 14, 26, 0.94);
-      }
 
-      * {
-        box-sizing: border-box;
-        margin: 0;
-        padding: 0;
-        -webkit-tap-highlight-color: transparent;
-      }
-      body {
-        font-family: "Tajawal", sans-serif;
-        background: var(--bg);
-        color: var(--text);
-        min-height: 100vh;
-        overflow-x: hidden;
-        line-height: 1.6;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        background:
-          radial-gradient(
-            ellipse at 50% -10%,
-            rgba(201, 148, 58, 0.2) 0%,
-            transparent 70%
-          ),
-          radial-gradient(
-            circle at 100% 100%,
-            rgba(75, 192, 200, 0.08) 0%,
-            transparent 40%
-          );
-        z-index: -1;
-        pointer-events: none;
-      }
-
-      .container {
-        width: 100%;
-        max-width: 500px;
-        margin: 0 auto;
-      }
-
-      /* ─────────────────────────────────────────────────────────────────────────────
-   SCREENS
-   ───────────────────────────────────────────────────────────────────────────── */
-      .screen {
-        display: none;
-        flex-direction: column;
-        padding: 24px 16px 140px;
-        min-height: 100vh;
-        animation: screenIn 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-      }
-      .screen.active {
-        display: flex;
-      }
-      @keyframes screenIn {
-        from {
-          opacity: 0;
-          transform: translateY(15px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      /* ─────────────────────────────────────────────────────────────────────────────
-   COMPONENTS
-   ───────────────────────────────────────────────────────────────────────────── */
-      .card-master {
-        background: linear-gradient(165deg, var(--card-bg), #1a1a35);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: var(--radius);
-        padding: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .hero-card-v3 {
-        background: linear-gradient(135deg, #12122b, #0e0e1a);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: var(--radius);
-        padding: 24px;
-        display: flex;
-        align-items: center;
-        gap: 24px;
-        margin-bottom: 24px;
-        box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8);
-        position: relative;
-      }
-
-      .hero-svg-box {
-        width: 100px;
-        height: 100px;
-        position: relative;
-        flex-shrink: 0;
-      }
-      .hero-svg {
-        position: absolute;
-        inset: 0;
-        transform: rotate(-90deg);
-        filter: drop-shadow(0 0 5px var(--glow));
-      }
-      .hero-track {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.05);
-        stroke-width: 8;
-      }
-      .hero-progress {
-        fill: none;
-        stroke: var(--primary);
-        stroke-width: 8;
-        stroke-linecap: round;
-        stroke-dasharray: 238;
-        stroke-dashoffset: 238;
-        transition: stroke-dashoffset 1s ease-out;
-      }
-      .hero-pct-text {
-        position: absolute;
-        inset: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.25rem;
-        font-weight: 800;
-        color: var(--primary-light);
-      }
-
-      .hero-stat-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: baseline;
-        margin-top: 5px;
-      }
-      .hero-stat-lbl {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-      }
-      .hero-stat-val {
-        font-family: "Scheherazade New", serif;
-        font-size: 1.6rem;
-        color: var(--primary);
-        line-height: 1;
-      }
-
-      .logo-main {
-        font-family: "Scheherazade New", serif;
-        font-size: 3rem;
-        font-weight: 700;
-        background: linear-gradient(
-          135deg,
-          var(--primary-light),
-          var(--primary),
-          var(--primary-dark)
-        );
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .btn-royal {
-        width: 100%;
-        background: linear-gradient(
-          135deg,
-          var(--primary),
-          var(--primary-dark)
-        );
-        color: #000;
-        border: none;
-        border-radius: 20px;
-        padding: 18px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: 0.2s;
-        box-shadow: 0 8px 30px rgba(201, 148, 58, 0.3);
-      }
-
-      /* ─────────────────────────────────────────────────────────────────────────────
-   LOGS (HISTORY) - USER EXPERIENCE
-   ───────────────────────────────────────────────────────────────────────────── */
-      .log-row {
-        background: rgba(255, 255, 255, 0.02);
-        border-radius: 18px;
-        padding: 14px 18px;
-        margin-bottom: 8px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        border-right: 4px solid var(--primary);
-      }
-      .log-row.manual {
-        border-right-color: var(--accent);
-      }
-      .log-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-      }
-      .log-type {
-        font-size: 0.8rem;
-        font-weight: 700;
-        color: var(--primary);
-      }
-      .log-date {
-        font-size: 0.65rem;
-        color: var(--text-dim);
-      }
-      .log-amt {
-        font-family: "Scheherazade New", serif;
-        font-size: 1.4rem;
-        color: var(--text);
-      }
-
-      /* ─────────────────────────────────────────────────────────────────────────────
-   BEAD CONTROL (AUTO RESET)
-   ───────────────────────────────────────────────────────────────────────────── */
-      .bead-ring {
-        width: 280px;
-        height: 280px;
-        margin: 20px auto;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        position: relative;
-      }
-      .bead-svg {
-        position: absolute;
-        inset: 0;
-        transform: rotate(-90deg);
-      }
-      .bead-track {
-        fill: none;
-        stroke: rgba(255, 255, 255, 0.03);
-        stroke-width: 10;
-      }
-      .bead-progress {
-        fill: none;
-        stroke: var(--primary);
-        stroke-width: 10;
-        stroke-linecap: round;
-        stroke-dasharray: 754;
-        stroke-dashoffset: 754;
-        transition: 0.2s linear;
-      }
-      .bead-core {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        background: radial-gradient(
-          circle at 35% 35%,
-          #ffd06b 0%,
-          var(--primary) 45%,
-          #2a1b00 100%
-        );
-        box-shadow:
-          0 15px 60px rgba(0, 0, 0, 0.8),
-          inset 0 -10px 20px rgba(0, 0, 0, 0.5);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: 0.05s;
-        z-index: 5;
-      }
-      .bead-core:active {
-        transform: scale(0.92);
-      }
-      .bead-lbl {
-        font-family: "Scheherazade New", serif;
-        font-size: 2.4rem;
-        font-weight: 700;
-        color: #fff;
-        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
-      }
-      .bead-pct-label {
-        position: absolute;
-        bottom: 35px;
-        left: 50%;
-        transform: translateX(-50%);
-        font-size: 0.85rem;
-        font-weight: 800;
-        color: #fff;
-        opacity: 0.8;
-      }
-
-      .goal-picker {
-        margin: 20px 0;
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-      }
-      .goal-btn {
-        background: rgba(255, 255, 255, 0.05);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: var(--text-muted);
-        padding: 10px 20px;
-        border-radius: 16px;
-        font-weight: 700;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        font-family: inherit;
-      }
-      .goal-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        transform: translateY(-2px);
-      }
-      .goal-btn.active {
-        background: var(--primary);
-        color: #000;
-        border-color: var(--primary);
-        box-shadow: 0 8px 20px var(--glow);
-        transform: scale(1.05);
-      }
-
-      .ranking-row {
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 22px;
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.04);
-      }
-      .ranking-row.me {
-        border-color: var(--primary);
-        background: rgba(201, 148, 58, 0.1);
-      }
-      .rank-badge {
-        width: 44px;
-        height: 44px;
-        background: rgba(0, 0, 0, 0.3);
-        border-radius: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: "Scheherazade New", serif;
-        font-size: 1.6rem;
-        color: var(--primary);
-      }
-
-      .nav-base {
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        right: 20px;
-        height: 76px;
-        background: var(--glass);
-        backdrop-filter: blur(25px);
-        border-radius: 26px;
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        z-index: 1000;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-      }
-      .nav-tab {
-        color: var(--text-dim);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        font-size: 0.75rem;
-        cursor: pointer;
-        border: none;
-        background: none;
-        font-family: inherit;
-        width: 25%;
-        transition: 0.3s;
-      }
-      .nav-tab.active {
-        color: var(--primary-light);
-      }
-      .nav-tab.active .ico {
-        transform: translateY(-30px);
-        color: var(--primary);
-        font-size: 1.8rem;
-      }
-      .nav-tab .ico {
-        font-size: 1.5rem;
-        transition: 0.3s;
-      }
-
-      .overlay-mask {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.95);
-        backdrop-filter: blur(15px);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 5000;
-        padding: 20px;
-      }
-      .modal-win {
-        background: var(--card-bg);
-        border-radius: 34px;
-        padding: 35px;
-        width: 100%;
-        max-width: 440px;
-        border: 1px solid var(--primary-dark);
-        text-align: right;
-      }
-      .input-field {
-        width: 100%;
-        background: #1a1a2e;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 16px;
-        color: var(--text);
-        font-family: inherit;
-        font-size: 1rem;
-        margin-bottom: 15px;
-        outline: none;
-        text-align: right;
-      }
-
-      [lang="ar"] {
-        direction: rtl;
-      }
-      .hidden {
-        display: none !important;
-      }
-      .row-fire {
-        font-size: 1.4rem;
-        filter: drop-shadow(0 0 5px var(--fire));
-        animation: flicker 2s infinite ease-in-out;
-      }
-      @keyframes flicker {
-        0%,
-        100% {
-          opacity: 0.8;
-          transform: scale(1);
-        }
-        50% {
-          opacity: 1;
-          transform: scale(1.15);
-        }
-      }
-
-      /* BADGES */
-      .badge-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: center;
-        margin: 15px 0;
-      }
-      .badge-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        padding: 10px 14px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.06);
-        min-width: 80px;
-      }
-      .badge-item.earned {
-        border-color: var(--primary);
-        background: rgba(201, 148, 58, 0.1);
-      }
-      .badge-item.locked {
-        opacity: 0.4;
-        filter: grayscale(1);
-      }
-      .badge-icon {
-        font-size: 1.8rem;
-      }
-      .badge-label {
-        font-size: 0.6rem;
-        color: var(--text-muted);
-        text-align: center;
-      }
-
-      /* PARTICLES */
-      .particle {
-        position: fixed;
-        pointer-events: none;
-        z-index: 9998;
-        border-radius: 50%;
-        animation: particleFly 1s ease-out forwards;
-      }
-      @keyframes particleFly {
-        0% {
-          opacity: 1;
-          transform: translate(0, 0) scale(1);
-        }
-        100% {
-          opacity: 0;
-          transform: translate(var(--px), var(--py)) scale(0);
-        }
-      }
-
-      /* COUNTDOWN */
-      .countdown-bar {
-        background: rgba(255, 255, 255, 0.04);
-        border-radius: 14px;
-        padding: 10px 16px;
-        margin-top: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-      }
-      .countdown-val {
-        font-family: "Scheherazade New", serif;
-        font-size: 1rem;
-        color: var(--fire);
-        direction: ltr;
-      }
-
-      /* DAILY MESSAGE */
-      .daily-msg {
-        background: linear-gradient(
-          135deg,
-          rgba(201, 148, 58, 0.15),
-          rgba(201, 148, 58, 0.05)
-        );
-        border: 1px solid rgba(201, 148, 58, 0.2);
-        border-radius: 16px;
-        padding: 14px 18px;
-        margin-bottom: 20px;
-        text-align: center;
-      }
-      .daily-msg .msg-text {
-        font-family: "Scheherazade New", serif;
-        font-size: 1.2rem;
-        color: var(--primary-light);
-      }
-
-      /* SOUND TOGGLE */
-      .sound-toggle {
-        position: absolute;
-        top: 12px;
-        left: 12px;
-        background: none;
-        border: none;
-        font-size: 1.2rem;
-        cursor: pointer;
-        opacity: 0.6;
-        z-index: 10;
-      }
-
-      /* SKELETON LOADING EFFECT */
-      .skeleton {
-        background: linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.03) 25%,
-          rgba(255, 255, 255, 0.08) 50%,
-          rgba(255, 255, 255, 0.03) 75%
-        );
-        background-size: 200% 100%;
-        animation: skeleton-loading 1.5s infinite linear;
-        border-radius: 12px;
-        border: none !important;
-        color: transparent !important;
-        pointer-events: none;
-      }
-      .skeleton * {
-        visibility: hidden !important;
-      }
-      @keyframes skeleton-loading {
-        from { background-position: 200% 0; }
-        to { background-position: -200% 0; }
-      }
-    </style>
+    <!-- External CSS -->
+    <link rel="stylesheet" href="css/style.css" />
   </head>
+
   <body>
-    <!-- شاشة منع التصفح أوفلاين -->
-    <div id="offline-screen" class="overlay-mask" style="display: none; flex-direction: column; text-align: center; background: rgba(6, 6, 12, 0.98); opacity: 1;">
-      <div class="modal-win" style="max-width: 400px; border-color: var(--danger);">
-        <div style="font-size: 5rem; margin-bottom: 20px;">🌐</div>
-        <h2 style="color: var(--primary); margin-bottom: 15px;">لا يوجد اتصال بالإنترنت</h2>
-        <p style="color: var(--text-muted); margin-bottom: 25px;">عذراً، يجب أن تكون متصلاً بالإنترنت لاستخدام تطبيق مليون استغفار. يرجى التحقق من الشبكة والمحاولة مرة أخرى.</p>
-        <button class="btn-royal" onclick="window.location.reload()">تحديث الصفحة 🔄</button>
-      </div>
-    </div>
+    <!-- Toast Message -->
+    <div id="toast"></div>
 
-    <div
-      id="toast"
-      style="
-        position: fixed;
-        top: 20px;
-        left: 50%;
-        transform: translateX(-50%) translateY(-120%);
-        background: var(--primary);
-        color: #000;
-        padding: 12px 20px;
-        border-radius: 20px;
-        z-index: 9999;
-        font-weight: 700;
-        transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        text-align: center;
-        width: max-content;
-        max-width: 85%;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        pointer-events: none;
-      "
-    ></div>
-
-    <!-- MODALS -->
-    <div id="m-manual" class="overlay-mask" onclick="closeModal('m-manual')">
-      <div class="modal-win" onclick="event.stopPropagation()">
-        <div id="manual-step-input">
-          <h3 style="color: var(--primary-light); margin-bottom: 20px">
-            إضافة رصيد يدوي 💎
-          </h3>
-          <input
-            type="number"
-            id="manual-val"
-            class="input-field"
-            placeholder="أدخل العدد هنا"
-          />
-          <button class="btn-royal" onclick="showManualConfirm()">
-            مراجعة الإضافة
-          </button>
-        </div>
-        <div id="manual-step-confirm" class="hidden" style="text-align: center">
-          <div style="font-size: 4rem; margin-bottom: 15px">🏁</div>
-          <h3 style="color: var(--primary-light); margin-bottom: 10px">
-            تأكيد الإنجاز
-          </h3>
-          <p style="font-size: 1rem; color: var(--text); margin-bottom: 20px">
-            أنت ستضيف <br /><span
-              id="confirm-num-display"
-              style="
-                font-size: 2.22rem;
-                font-family: &quot;Scheherazade New&quot;, serif;
-                color: var(--primary);
-              "
-              >0</span
-            >
-            <br />
-            استغفار. متأكد؟
-          </p>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px">
-            <button class="btn-royal" onclick="submitManual()">تأكيد✓</button>
-            <button
-              class="btn-royal"
-              style="background: #2a1b1b; color: var(--danger)"
-              onclick="resetManualModal()"
-            >
-              تعديل
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      id="m-edit-user"
-      class="overlay-mask"
-      onclick="closeModal('m-edit-user')"
-    >
-      <div class="modal-win" onclick="event.stopPropagation()">
-        <h3 style="color: var(--primary-light); margin-bottom: 15px">
-          تعديل البيانات 👤
-        </h3>
-        <input
-          type="text"
-          id="edit-u-name"
-          class="input-field"
-          placeholder="الاسم"
-        />
-        <input
-          type="text"
-          id="edit-u-pass"
-          class="input-field"
-          placeholder="كلمة السر"
-        />
-        <input
-          type="number"
-          id="edit-u-gems"
-          class="input-field"
-          placeholder="الماس"
-        />
-        <div
-          id="edit-u-balances"
-          style="margin-top: 15px; max-height: 150px; overflow-y: auto"
-        ></div>
-        <label
-          style="
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-          "
-        >
-          <input type="checkbox" id="edit-u-hidden" /> إخفاء هذا العضو من
-          الترتيب العام
-        </label>
-        <button
-          class="btn-royal"
-          style="margin-top: 20px"
-          onclick="saveUserEdit()"
-        >
-          حفظ التعديلات
-        </button>
-      </div>
-    </div>
-
-    <div
-      id="m-custom-goal"
-      class="overlay-mask"
-      onclick="closeModal('m-custom-goal')"
-    >
-      <div class="modal-win" onclick="event.stopPropagation()">
-        <h3 style="color: var(--primary-light); margin-bottom: 15px">
-          هدف الجلسة 🎯
-        </h3>
-        <input
-          type="number"
-          id="custom-goal-val"
-          class="input-field"
-          placeholder="أدخل الرقم المراد"
-        />
-        <button class="btn-royal" onclick="applyCustomGoal()">حفظ</button>
-      </div>
-    </div>
-
-    <!-- SCREENS -->
-    <div id="s-login" class="screen active">
-      <div
-        class="container"
-        style="
-          justify-content: center;
-          min-height: 85vh;
-          display: flex;
-          flex-direction: column;
-        "
-      >
-        <form
-          class="card-master"
-          style="text-align: center"
-          onsubmit="
-            event.preventDefault();
-            isSignupMode ? handleSignup() : handleLogin();
-          "
-        >
+    <!-- UI Core -->
+    <div class="container">
+      <!-- Screen: Login -->
+      <section id="s-login" class="screen active" style="padding-top: 60px">
+        <div style="text-align: center; margin-bottom: 40px">
           <h1 class="logo-main">مليون استغفار</h1>
-          <p style="color: var(--text-muted); margin-bottom: 30px">
-            بوابة الأكابر والذاكرين
+          <p style="color: var(--text-muted); font-size: 0.9rem">
+            أهلاً بك في تحدي الاستغفار الجماعي
           </p>
+        </div>
+
+        <div class="card-master">
           <input
             type="text"
             id="signup-name"
-            name="name"
             class="input-field hidden"
-            placeholder="الاسم الكامل"
-            autocomplete="name"
+            placeholder="الاسم الكريم"
           />
           <input
             type="email"
             id="login-id"
-            name="email"
             class="input-field"
             placeholder="البريد الإلكتروني"
-            autocomplete="email"
-            required
           />
           <input
             type="password"
             id="login-pass"
-            name="password"
             class="input-field"
-            placeholder="كلمة السر"
-            autocomplete="current-password"
-            required
+            placeholder="كلمة المرور"
           />
-          <button type="submit" class="btn-royal" id="btn-login-action">
-            دخول آمن
-          </button>
-          <button type="submit" class="btn-royal hidden" id="btn-signup-action">
-            إنشاء حساب
-          </button>
-          <p
-            id="toggle-auth-text"
-            class="hidden"
-            style="
-              margin-top: 20px;
-              color: var(--primary);
-              cursor: pointer;
-              font-size: 0.9rem;
-            "
-            onclick="toggleAuthMode()"
-          >
-            ليس لديك حساب؟ سجل الآن
-          </p>
-        </form>
-      </div>
-    </div>
 
-    <div id="s-dash" class="screen">
-      <div class="container">
-        <div
+          <button
+            id="btn-login-action"
+            class="btn-royal"
+            onclick="handleLogin()"
+          >
+            دخول 📿
+          </button>
+          <button
+            id="btn-signup-action"
+            class="btn-royal hidden"
+            onclick="handleSignup()"
+          >
+            إنشاء حساب ✨
+          </button>
+
+          <div style="text-align: center; margin-top: 25px">
+            <button
+              onclick="toggleAuthMode()"
+              id="toggle-auth-text"
+              style="
+                background: none;
+                border: none;
+                color: var(--text-muted);
+                font-size: 0.85rem;
+                cursor: pointer;
+                text-decoration: underline;
+              "
+            >
+              ليس لديك حساب؟ سجل الآن
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen: Dashboard -->
+      <section id="s-dash" class="screen">
+        <header
           id="dash-header"
           style="
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
+            align-items: center;
             margin-bottom: 25px;
           "
-        ></div>
+        >
+          <!-- Skeleton loader by default -->
+        </header>
+
         <div id="daily-msg-area"></div>
+
         <div
           id="dash-chips-area"
           style="
             display: flex;
+            gap: 8px;
             overflow-x: auto;
-            gap: 10px;
-            padding-bottom: 15px;
-            scrollbar-width: none;
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            -webkit-overflow-scrolling: touch;
           "
         ></div>
+
         <div id="hero-card-v3-area"></div>
-        <div
+
+        <h3
           id="rank-title-ui"
+          style="
+            margin-bottom: 15px;
+            color: var(--primary-light);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+          "
+        >
+          <span class="row-fire">🔥</span> لوحة المنافسة
+        </h3>
+        <div id="rankings-area-ui"></div>
+      </section>
+
+      <!-- Screen: Tasbih -->
+      <section id="s-tasbih" class="screen">
+        <header style="text-align: center; margin-bottom: 25px">
+          <h3 id="t-chal-title-ui" style="color: var(--primary-light)">
+            جاري التحميل...
+          </h3>
+        </header>
+
+        <div class="card-master" style="padding: 15px">
+          <button
+            id="sound-toggle-btn"
+            class="sound-toggle"
+            onclick="toggleSound()"
+          >
+            🔊
+          </button>
+
+          <div class="bead-ring" onclick="tapSubha()">
+            <svg class="bead-svg" viewBox="0 0 260 260">
+              <circle class="bead-track" cx="130" cy="130" r="120"></circle>
+              <circle
+                id="bead-progress-bar"
+                class="bead-progress"
+                cx="130"
+                cy="130"
+                r="120"
+              ></circle>
+            </svg>
+            <button class="bead-core">
+              <div style="font-size: 0.8rem; opacity: 0.6; color: #fff">
+                استغفر
+              </div>
+              <div id="sess-v-ui" class="bead-lbl">٠</div>
+            </button>
+            <div id="bead-pct" class="bead-pct-label">٠٪</div>
+          </div>
+
+          <div class="goal-picker">
+            <button id="g-33" class="goal-btn" onclick="setG(33)">٣٣</button>
+            <button id="g-100" class="goal-btn" onclick="setG(100)">١٠٠</button>
+            <button id="g-1000" class="goal-btn" onclick="setG(1000)">
+              ١٠٠٠
+            </button>
+            <button
+              id="g-custom"
+              class="goal-btn"
+              onclick="openModal('m-custom-goal')"
+            >
+              ⚙️
+            </button>
+          </div>
+
+          <div
+            style="
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              gap: 15px;
+              margin-top: 15px;
+            "
+          >
+            <div style="color: var(--text-muted); font-size: 0.85rem">
+              الهدف:
+              <span id="tg-v-ui" style="color: var(--primary-light)">٠</span>
+            </div>
+            <div
+              style="
+                width: 1px;
+                height: 15px;
+                background: rgba(255, 255, 255, 0.1);
+              "
+            ></div>
+            <button
+              onclick="resetSess()"
+              style="
+                background: none;
+                border: none;
+                color: var(--danger);
+                font-size: 0.8rem;
+                cursor: pointer;
+              "
+            >
+              تصفير العداد ↺
+            </button>
+          </div>
+        </div>
+
+        <button
+          onclick="saveW()"
+          style="
+            background: linear-gradient(135deg, var(--accent), #1a5c38);
+            color: #fff;
+            width: 100%;
+            border: none;
+            border-radius: 20px;
+            padding: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 30px rgba(45, 158, 95, 0.25);
+          "
+        >
+          حفظ الرصيد الحالي ✅
+        </button>
+
+        <button
+          onclick="openManualModal()"
+          style="
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            width: 100%;
+            border: none;
+            border-radius: 18px;
+            padding: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+          "
+        >
+          إدخال يدوي سريع ⌨️
+        </button>
+      </section>
+
+      <!-- Screen: Honor (Global Stats) -->
+      <section id="s-honor" class="screen">
+        <h2
+          style="
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-light);
+          "
+        >
+          مجلس الشرف 🏆
+        </h2>
+        <div id="honor-board-ui"></div>
+      </section>
+
+      <!-- Screen: Badges -->
+      <section id="s-badges" class="screen">
+        <h2
+          style="
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--primary-light);
+          "
+        >
+          الأوسمة والمقتنيات 🏅
+        </h2>
+        <div id="all-badges-list-ui"></div>
+      </section>
+
+      <!-- Screen: Profile & Settings -->
+      <section id="s-settings" class="screen">
+        <div
+          id="profile-area-ui"
+          style="text-align: center; margin-bottom: 30px"
+        ></div>
+
+        <div class="card-master" style="padding: 10px">
+          <button
+            onclick="installApp()"
+            id="pwa-install-btn"
+            style="
+              display: none;
+              width: 100%;
+              text-align: right;
+              background: none;
+              border: none;
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+              padding: 15px;
+              color: var(--diamond);
+              font-family: inherit;
+              font-size: 0.9rem;
+              cursor: pointer;
+            "
+          >
+            تثبيت التطبيق على الهاتف 📱
+          </button>
+          <div
+            id="ios-install-msg"
+            style="
+              display: none;
+              padding: 15px;
+              font-size: 0.75rem;
+              color: var(--text-muted);
+              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            "
+          >
+            لتثبيت التطبيق على iPhone: اضغط
+            <img
+              src="https://web-assets.bc.googleusercontent.com/images/ios-share.png"
+              height="18"
+              style="vertical-align: middle"
+            />
+            ثم "Add to Home Screen"
+          </div>
+          <button
+            onclick="handleLogout()"
+            style="
+              width: 100%;
+              text-align: right;
+              background: none;
+              border: none;
+              padding: 15px;
+              color: var(--danger);
+              font-family: inherit;
+              font-size: 0.9rem;
+              cursor: pointer;
+            "
+          >
+            تسجيل الخروج 👋
+          </button>
+        </div>
+
+        <p
+          style="
+            text-align: center;
+            font-size: 0.6rem;
+            color: var(--text-dim);
+            margin-top: 20px;
+          "
+        >
+          دعم وإدارة: مصطفي حسن - اصدار V19 مكس
+        </p>
+      </section>
+
+      <!-- Screen: Admin (Admin Only) -->
+      <section id="s-admin" class="screen">
+        <div
           style="
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin: 10px 0 15px;
+            margin-bottom: 20px;
           "
         >
-          <h2 style="font-size: 1.1rem; color: var(--primary-light); margin: 0">
-            ترتيب المتنافسين
-          </h2>
-          <span class="row-fire">🔥</span>
-        </div>
-        <div id="rankings-area-ui"></div>
-      </div>
-    </div>
-
-    <div id="s-history" class="screen">
-      <div class="container">
-        <h1 class="logo-main" style="font-size: 2.2rem; margin-bottom: 20px">
-          سجل الأعمال
-        </h1>
-        <div id="history-list-ui"></div>
-      </div>
-    </div>
-
-    <div id="s-honor" class="screen">
-      <div class="container">
-        <h1 class="logo-main" style="font-size: 2.2rem; margin-bottom: 8px">
-          لوحة الشرف
-        </h1>
-        <p style="color: var(--text-muted); margin-bottom: 30px">
-          أعظم الذاكرين وسجلات الخالدين 🏆
-        </p>
-
-        <div
-          class="card-master"
-          style="
-            background: linear-gradient(135deg, #1a1a35, #0a0a20);
-            border: 2px solid var(--primary);
-          "
-        >
-          <div style="text-align: center; margin-bottom: 20px">
-            <div style="font-size: 3rem">🌟</div>
-            <h3 style="color: var(--primary-light)">فرسان الاستغفار</h3>
-          </div>
-          <div id="honor-board-ui"></div>
-        </div>
-      </div>
-    </div>
-
-    <div id="s-tasbih" class="screen">
-      <div class="container" style="text-align: center; position: relative">
-        <button
-          class="sound-toggle"
-          id="sound-toggle-btn"
-          onclick="toggleSound()"
-          title="تشغيل/إيقاف الأصوات"
-        >
-          🔊
-        </button>
-        <h2
-          id="t-chal-title-ui"
-          style="color: var(--primary-light); font-size: 1.35rem"
-        >
-          تحدي المليون
-        </h2>
-
-        <div class="goal-picker">
-          <button class="goal-btn active" id="g-33" onclick="setG(33)">
-            ٣٣
-          </button>
-          <button class="goal-btn" id="g-100" onclick="setG(100)">١٠٠</button>
-          <button class="goal-btn" id="g-1000" onclick="setG(1000)">
-            ١٠٠٠
-          </button>
+          <h2 style="color: var(--primary-light)">لوحة الإدارة 🛠️</h2>
           <button
-            class="goal-btn"
-            id="g-custom"
-            onclick="openModal('m-custom-goal')"
-          >
-            رقم ➕
-          </button>
-        </div>
-
-        <div class="bead-ring">
-          <svg class="bead-svg" viewBox="0 0 250 250">
-            <circle class="bead-track" cx="125" cy="125" r="120"></circle>
-            <circle
-              class="bead-progress"
-              id="bead-progress-bar"
-              cx="125"
-              cy="125"
-              r="120"
-            ></circle>
-          </svg>
-          <button class="bead-core" onclick="tapSubha()">
-            <div
-              style="
-                font-size: 0.9rem;
-                margin-bottom: -5px;
-                opacity: 0.8;
-                font-weight: 700;
-              "
-            >
-              أستغفر الله
-            </div>
-            <div class="bead-lbl" id="sess-v-ui">٠</div>
-            <span class="bead-pct-label" id="bead-pct">٠٪</span>
-          </button>
-        </div>
-
-        <div
-          style="
-            margin: 10px 0 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-          "
-        >
-          <div
+            onclick="navTo('s-dash')"
             style="
-              font-size: 0.9rem;
+              background: rgba(255, 255, 255, 0.05);
+              border: none;
+              padding: 5px 15px;
+              border-radius: 10px;
               color: var(--text-muted);
-              font-weight: 700;
+              font-family: inherit;
             "
           >
-            المستهدف للجلسة:
-            <span
-              id="tg-v-ui"
-              style="
-                color: var(--primary-light);
-                font-size: 1.1rem;
-                font-family: &quot;Scheherazade New&quot;, serif;
-              "
-              >٠</span
-            >
-          </div>
-          <button
-            class="btn-royal"
-            style="
-              background: transparent;
-              border: 1px solid rgba(196, 58, 58, 0.4);
-              color: var(--danger);
-              box-shadow: none;
-              padding: 6px 20px;
-              width: fit-content;
-              border-radius: 12px;
-              font-size: 0.85rem;
-            "
-            onclick="resetSess()"
-          >
-            تصفير العداد ↺
+            رجوع
           </button>
         </div>
 
-        <div
-          style="
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 20px;
-          "
-        >
-          <button class="btn-royal" onclick="saveW()">✓ حفظ العمل</button>
-          <button
-            class="btn-royal"
-            style="background: #1a1a2e; color: var(--text-muted)"
-            onclick="openManualModal()"
-          >
-            ➕ رصيد يدوي
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="s-admin" class="screen">
-      <div class="container">
-        <h1 class="logo-main" style="font-size: 2rem">لوحة المدير</h1>
-
-        <div class="card-master">
-          <h3
-            style="color: var(--primary-light); margin-bottom: 12px"
-            id="admin-chal-form-title"
-          >
+        <!-- Admin: Challenge Management -->
+        <div class="card-master" style="padding: 18px">
+          <h4 id="admin-chal-form-title" style="margin-bottom: 15px">
             بدء تحدي جديد 🏆
-          </h3>
+          </h4>
           <input
             type="text"
             id="nc-title"
             class="input-field"
-            placeholder="عنوان التحدي"
+            placeholder="عنوان التحدي (مثلاً: السباق الرمضاني)"
           />
           <input
             type="number"
             id="nc-goal"
             class="input-field"
-            placeholder="الهدف الرقمي (مثلاً 1000000)"
+            placeholder="الهدف الكلي (مثلاً: ١٠٠٬٠٠٠)"
           />
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              margin-bottom: 15px;
-              color: var(--text-muted);
-              font-size: 0.9rem;
-            "
-          >
-            <input type="checkbox" id="nc-active" checked /> هل التحدي نشط؟
-            (سيظهر للمشاركين)
-          </label>
           <input
             type="number"
             id="nc-days"
             class="input-field"
-            placeholder="عدد أيام التحدي (اختياري)"
-            style="margin-bottom: 10px"
+            placeholder="المدة بالأيام (اختياري)"
           />
-          <p
+
+          <div style="margin-bottom: 15px">
+            <label style="font-size: 0.75rem; color: var(--text-muted)"
+              >المشاركين:</label
+            >
+            <div
+              id="admin-user-checkboxes"
+              style="
+                margin-top: 8px;
+                max-height: 120px;
+                overflow-y: auto;
+                background: rgba(0, 0, 0, 0.2);
+                padding: 10px;
+                border-radius: 12px;
+              "
+            ></div>
+          </div>
+
+          <label
             style="
-              font-size: 0.8rem;
-              margin-bottom: 8px;
-              color: var(--text-muted);
-            "
-          >
-            اختار المشاركين:
-          </p>
-          <div
-            id="admin-user-checkboxes"
-            style="
-              max-height: 120px;
-              overflow-y: auto;
-              background: rgba(0, 0, 0, 0.3);
-              border-radius: 12px;
-              padding: 10px;
+              display: flex;
+              align-items: center;
+              gap: 8px;
               margin-bottom: 15px;
+              cursor: pointer;
+              font-size: 0.85rem;
             "
-          ></div>
+          >
+            <input type="checkbox" id="nc-active" checked /> تحدي نشط للجميع
+          </label>
+
+          <div style="display: flex; gap: 8px">
+            <button
+              id="admin-chal-btn"
+              onclick="addChallenge()"
+              class="btn-royal"
+              style="padding: 12px"
+            >
+              ابدأ التحدي 🔥
+            </button>
+            <button
+              id="admin-chal-cancel"
+              onclick="cancelEditChallenge()"
+              class="btn-royal hidden"
+              style="background: var(--text-dim); padding: 12px"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+
+        <!-- Admin: List of Challenges -->
+        <h4 style="margin: 10px 0; color: var(--text-muted)">
+          التحديات الحالية:
+        </h4>
+        <div id="admin-challenge-list-ui"></div>
+
+        <hr style="opacity: 0.05; margin: 25px 0" />
+
+        <!-- Admin: Management of Public Message -->
+        <div class="card-master" style="padding: 18px">
+          <h4 style="margin-bottom: 15px">رسالة الإدارة 📢</h4>
+          <textarea
+            id="admin-daily-msg"
+            class="input-field"
+            style="height: 80px; resize: none"
+            placeholder="اكتب رسالة تظهر للجميع..."
+          ></textarea>
           <button
+            onclick="saveDailyMsg()"
             class="btn-royal"
-            id="admin-chal-btn"
-            onclick="addChallenge()"
+            style="padding: 12px"
           >
-            ابدأ التحدي 🔥
-          </button>
-          <button
-            id="admin-chal-cancel"
-            class="btn-royal hidden"
-            style="
-              margin-top: 10px;
-              background: #2a1b1b;
-              color: var(--text-muted);
-            "
-            onclick="cancelEditChallenge()"
-          >
-            إلغاء التعديل
+            نشر الرسالة
           </button>
         </div>
 
-        <h2
-          style="
-            font-size: 1.1rem;
-            color: var(--primary-light);
-            margin-bottom: 10px;
-          "
-        >
-          التحديات الحالية
-        </h2>
-        <div
-          id="admin-challenge-list-ui"
-          class="ranking-list"
-          style="margin-bottom: 24px"
-        ></div>
+        <!-- Admin: User Management -->
+        <h4 style="margin: 20px 0 10px; color: var(--text-muted)">
+          إدارة المستخدمين:
+        </h4>
+        <div id="admin-user-list-ui"></div>
 
-        <div class="card-master">
-          <h3 style="color: var(--primary-light); margin-bottom: 12px">
-            إدارة الأوسمة 🏅
-          </h3>
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 10px;
-              margin-bottom: 10px;
-            "
-          >
+        <hr style="opacity: 0.05; margin: 25px 0" />
+
+        <!-- Admin: Badges Management -->
+        <div class="card-master" style="padding: 18px">
+          <h4 style="margin-bottom: 15px">إضافة وسام جديد 🏅</h4>
+          <div style="display: flex; gap: 8px">
             <input
               type="text"
               id="nb-icon"
               class="input-field"
-              placeholder="الأيقونة (مثلاً ⭐)"
-              style="margin-bottom: 0"
+              style="flex: 1"
+              placeholder="أيقونة (💎)"
             />
             <input
               type="text"
               id="nb-title"
               class="input-field"
+              style="flex: 3"
               placeholder="اسم الوسام"
-              style="margin-bottom: 0"
             />
           </div>
           <input
             type="number"
             id="nb-target"
             class="input-field"
-            placeholder="العدد المطلوب (مثلاً 1000)"
+            placeholder="الرصيد المطلوب (مثلاً: ٥٠٬٠٠٠)"
           />
-          <button class="btn-royal" onclick="addBadge()">
-            إضافة وسام جديد
+          <button onclick="addBadge()" class="btn-royal" style="padding: 12px">
+            إضافة الوسام
           </button>
+
           <div
             id="admin-badge-list-ui"
-            style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 8px"
+            style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px"
           ></div>
         </div>
+      </section>
 
-        <div class="card-master">
-          <h3 style="color: var(--accent); margin-bottom: 12px">
-            إضافة مستخدم جديد 👤
-          </h3>
-          <input
-            type="text"
-            id="nu-name"
-            class="input-field"
-            placeholder="الاسم الكامل"
-          />
-          <input
-            type="email"
-            id="nu-email"
-            class="input-field"
-            placeholder="البريد الإلكتروني"
-          />
-          <input
-            type="password"
-            id="nu-pass"
-            class="input-field"
-            placeholder="كلمة السر للجهاز"
-          />
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 10px;
-              margin-bottom: 15px;
-              color: var(--text-muted);
-              font-size: 0.9rem;
-            "
-          >
-            <input type="checkbox" id="nu-hidden" /> عضو مخفي (يراه الآدمن فقط)
-          </label>
-          <button
-            class="btn-royal"
-            style="background: var(--accent); color: #000"
-            onclick="addUser()"
-          >
-            إنشاء المستخدم ✓
-          </button>
-        </div>
+      <!-- Bottom Navigation -->
+      <nav id="app-nav" class="nav-base">
+        <button id="n-dash" onclick="navTo('s-dash')" class="nav-tab active">
+          <span class="ico">🏠</span>
+          <span>الرئيسية</span>
+        </button>
+        <button id="n-tasbih" onclick="navTo('s-tasbih')" class="nav-tab">
+          <span class="ico">📿</span>
+          <span>السبحة</span>
+        </button>
+        <button id="n-honor" onclick="navTo('s-honor')" class="nav-tab">
+          <span class="ico">🏆</span>
+          <span>المتصدرين</span>
+        </button>
+        <button id="n-badges" onclick="navTo('s-badges')" class="nav-tab">
+          <span class="ico">🏅</span>
+          <span>الأوسمة</span>
+        </button>
+        <button id="n-settings" onclick="navTo('s-settings')" class="nav-tab">
+          <span class="ico">⚙️</span>
+          <span>حسابي</span>
+        </button>
+      </nav>
+    </div>
 
-        <h2
+    <!-- Modals -->
+    <div id="m-custom-goal" class="overlay-mask">
+      <div class="modal-win">
+        <h3>تحديد هدف مخصص ⚙️</h3>
+        <p
           style="
-            font-size: 1.1rem;
-            color: var(--primary-light);
-            margin-bottom: 10px;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin: 10px 0 20px;
           "
         >
-          الأعضاء والسلوكيات
-        </h2>
-        <div id="admin-user-list-ui" class="ranking-list"></div>
-
-        <div class="card-master" style="margin-top: 24px">
-          <h3 style="color: var(--fire); margin-bottom: 12px">
-            ذكر اليوم / رسالة تحفيزية 🕯️
-          </h3>
-          <textarea
-            id="admin-daily-msg"
-            class="input-field"
-            rows="3"
-            placeholder="اكتب رسالة تظهر لجميع المشاركين..."
-            style="resize: none"
-          ></textarea>
+          سيتم تصفير العداد الحالي عند تغيير الهدف.
+        </p>
+        <input
+          type="number"
+          id="custom-goal-val"
+          class="input-field"
+          placeholder="مثلاً: ٣٠٠"
+        />
+        <div style="display: flex; gap: 10px">
           <button
+            onclick="applyCustomGoal()"
             class="btn-royal"
-            style="background: linear-gradient(135deg, var(--fire), #cc4400)"
-            onclick="saveDailyMsg()"
+            style="padding: 12px"
           >
-            نشر الرسالة
+            تأكيد
+          </button>
+          <button
+            onclick="closeModal('m-custom-goal')"
+            class="btn-royal"
+            style="background: var(--text-dim); padding: 12px"
+          >
+            إلغاء
           </button>
         </div>
-        <button
-          class="btn-royal"
-          style="margin-top: 20px; background: none; color: var(--text-muted)"
-          onclick="navTo('s-dash')"
+      </div>
+    </div>
+
+    <div id="m-manual" class="overlay-mask">
+      <div class="modal-win">
+        <div id="manual-step-input">
+          <h3>إضافة رصيد يدوي ⌨️</h3>
+          <p
+            style="
+              color: var(--text-muted);
+              font-size: 0.8rem;
+              margin: 10px 0 20px;
+            "
+          >
+            استخدم هذا فقط إذا استغفرت خارج التطبيق.
+          </p>
+          <input
+            type="number"
+            id="manual-val"
+            class="input-field"
+            placeholder="العدد"
+          />
+          <div style="display: flex; gap: 10px">
+            <button
+              onclick="showManualConfirm()"
+              class="btn-royal"
+              style="padding: 12px; background: var(--accent)"
+            >
+              متابعة
+            </button>
+            <button
+              onclick="closeModal('m-manual')"
+              class="btn-royal"
+              style="background: var(--text-dim); padding: 12px"
+            >
+              إلغاء
+            </button>
+          </div>
+        </div>
+        <div id="manual-step-confirm" class="hidden" style="text-align: center">
+          <h2 style="color: var(--primary-light); margin-bottom: 20px">
+            هل أنت متأكد؟
+          </h2>
+          <div
+            style="
+              font-size: 2.5rem;
+              color: var(--text);
+              border: 2px dashed var(--primary);
+              padding: 20px;
+              border-radius: 20px;
+              margin-bottom: 20px;
+            "
+            id="confirm-num-display"
+          ></div>
+          <div style="display: flex; gap: 10px">
+            <button
+              onclick="submitManual()"
+              class="btn-royal"
+              style="padding: 12px; background: var(--accent)"
+            >
+              نعم، أضف الرصيد ✅
+            </button>
+            <button
+              onclick="closeModal('m-manual')"
+              class="btn-royal"
+              style="background: var(--text-dim); padding: 12px"
+            >
+              تراجع
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="m-edit-user" class="overlay-mask">
+      <div class="modal-win">
+        <h3>تحديث بيانات المستخدم ✏️</h3>
+        <div style="margin-top: 15px">
+          <label style="font-size: 0.75rem; color: var(--text-muted)"
+            >الاسم</label
+          >
+          <input type="text" id="edit-u-name" class="input-field" />
+        </div>
+        <div style="margin-top: 5px">
+          <label style="font-size: 0.75rem; color: var(--text-muted)"
+            >الماس 💎</label
+          >
+          <input type="number" id="edit-u-gems" class="input-field" />
+        </div>
+        <label
+          style="
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 15px 0;
+            cursor: pointer;
+          "
         >
-          خروج
-        </button>
-      </div>
-    </div>
-
-    <div id="s-badges" class="screen">
-      <div class="container">
-        <h1 class="logo-main" style="font-size: 2.22rem; margin-bottom: 20px">
-          الأوسمة المتاحة 🎓
-        </h1>
-        <div id="all-badges-list-ui"></div>
-      </div>
-    </div>
-
-    <div id="s-settings" class="screen">
-      <div class="container">
-        <h1 class="logo-main">حسابي</h1>
+          <input type="checkbox" id="edit-u-hidden" /> إخفاء من لوحة الشرف
+        </label>
         <div
-          id="profile-area-ui"
-          class="card-master"
-          style="text-align: center"
+          id="edit-u-balances"
+          style="
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.1);
+            padding: 10px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+          "
         ></div>
-
-        <!-- زر التثبيت المخصص -->
-        <button
-          id="pwa-install-btn"
-          class="btn-royal"
-          style="display: none; background: var(--accent); margin-bottom: 12px; width: 100%"
-          onclick="installApp()"
-        >
-          تثبيت التطبيق على الهاتف 📲
-        </button>
-
-        <div id="ios-install-msg" style="display:none; font-size:0.8rem; color:var(--text-dim); text-align:center; margin-bottom:15px; border:1px dashed var(--primary); padding:10px; border-radius:10px;">
-            لمستخدمي الآيفون: اضغط على زر المشاركة <span style="font-size:1.1rem;">⎋</span> ثم اختر "إضافة إلى الشاشة الرئيسية" لزيادة سهولة الوصول.
+        <div style="display: flex; gap: 10px">
+          <button
+            onclick="saveUserEdit()"
+            class="btn-royal"
+            style="padding: 12px"
+          >
+            حفظ التعديلات
+          </button>
+          <button
+            onclick="closeModal('m-edit-user')"
+            class="btn-royal"
+            style="background: var(--text-dim); padding: 12px"
+          >
+            إلغاء
+          </button>
         </div>
-
-        <button
-          class="btn-royal"
-          style="background: var(--danger); width: 100%"
-          onclick="handleLogout()"
-        >
-          تسجيل الخروج
-        </button>
       </div>
     </div>
 
-    <nav id="app-nav" class="nav-base" style="display: none">
-      <button class="nav-tab active" id="n-dash" onclick="navTo('s-dash')">
-        <span class="ico">🏆</span><span>ترتيب</span>
+    <div
+      id="offline-screen"
+      style="
+        position: fixed;
+        inset: 0;
+        background: var(--bg);
+        z-index: 10000;
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 20px;
+      "
+    >
+      <div style="font-size: 5rem; margin-bottom: 20px">📡</div>
+      <h2 style="color: var(--primary-light)">لا يوجد اتصال بالإنترنت</h2>
+      <p style="color: var(--text-muted); margin-top: 10px">
+        يمكنك الاستمرار في التسبيح، وسيتم حفظ بياناتك ومزامنتها تلقائياً عند
+        عودة الاتصال.
+      </p>
+      <button
+        onclick="
+          document.getElementById('offline-screen').style.display = 'none'
+        "
+        class="btn-royal"
+        style="margin-top: 30px; width: auto; padding: 15px 40px"
+      >
+        فهمت، تابع العمل 📿
       </button>
-      <button class="nav-tab" id="n-tasbih" onclick="navTo('s-tasbih')">
-        <span class="ico">📿</span><span>سبحة</span>
-      </button>
-      <button class="nav-tab" id="n-badges" onclick="navTo('s-badges')">
-        <span class="ico">🎖️</span><span>الأوسمة</span>
-      </button>
-      <button class="nav-tab" id="n-honor" onclick="navTo('s-honor')">
-        <span class="ico">🌟</span><span>الشرف</span>
-      </button>
-      <button class="nav-tab" id="n-history" onclick="navTo('s-history')">
-        <span class="ico">📜</span><span>سجل</span>
-      </button>
-      <button class="nav-tab" id="n-settings" onclick="navTo('s-settings')">
-        <span class="ico">👤</span><span>حسابي</span>
-      </button>
-    </nav>
-
-    <script>
-      // ─────────────────────────────────────────────────────────────────────────────
-      // SUPABASE CONFIGURATION - ضع بياناتك هنا
-      // ─────────────────────────────────────────────────────────────────────────────
-      const SUPABASE_URL = "https://oamkkuskpzectkixynyb.supabase.co";
-      const SUPABASE_ANON_KEY =
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9hbWtrdXNrcHplY3RraXh5bnliIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQyNzg0MTksImV4cCI6MjA4OTg1NDQxOX0.FDTCL_fgRsHkUmVk3OYSwU7eS1EgtSRBxL_uaSLCvhM";
-      const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      let state = {
-        users: [],
-        challenges: [],
-        progress: {},
-        logs: [],
-        badges: [],
-        dailyMsg: "",
-        currentUser: null,
-        currentChallengeId: "",
-        subGoal: 33,
-        soundOn: true,
-        pendingActions: [],
-      };
-      let deferredPrompt;
-      let syncLockPromise = null;
-      let realtimeChannel = null;
-
-      function save() {
-        if (!state.currentUser) {
-          localStorage.removeItem("million_v19_offline");
-          return;
-        }
-
-        const myId = state.currentUser.id;
-        
-        // تصفية التقدم ليشمل فقط السجلات الخاصة بالمستخدم الحالي لضمان الخصوصية
-        const myProgress = {};
-        for (const k in state.progress) {
-          if (k.startsWith(myId + "_")) {
-            myProgress[k] = state.progress[k];
-          }
-        }
-
-        // تصفية السجلات لتشمل فقط السجلات الخاصة بالمستخدم الحالي
-        const myLogs = state.logs.filter(l => (l.userId === myId || l.user_id === myId));
-
-        const saveData = {
-          currentUser: state.currentUser,
-          currentChallengeId: state.currentChallengeId,
-          subGoal: state.subGoal,
-          soundOn: state.soundOn,
-          pendingActions: state.pendingActions,
-          progress: state.progress, // حفظ كافة التقدم (للترتيب الأوفلاين)
-          myLogs: myLogs,
-          challenges: state.challenges,
-          users: state.users,
-          badges: state.badges 
-        };
-
-        localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
-      }
-      async function load() {
-        // تحميل فوري من التخزين المحلي لسرعة الفتح (الأوفلاين أولاً)
-        const localData = localStorage.getItem("million_v19_offline");
-        if (localData) {
-          try {
-            const parsed = JSON.parse(localData);
-            
-            // استعادة البيانات مع مراعاة الهيكلة الجديدة (للمستخدم الحالي فقط)
-            if (parsed.currentUser) {
-              state.currentUser = parsed.currentUser;
-              state.currentChallengeId = parsed.currentChallengeId || "";
-              state.subGoal = parsed.subGoal || 33;
-              state.soundOn = (parsed.soundOn !== undefined) ? parsed.soundOn : true;
-              state.pendingActions = parsed.pendingActions || [];
-              
-              // استعادة التقدم (دعم للهيكلتين لضمان عدم ضياع البيانات)
-              if (parsed.progress) {
-                state.progress = { ...parsed.progress };
-              } else if (parsed.myProgress) {
-                state.progress = { ...parsed.myProgress };
-              }
-
-              if (parsed.myLogs) {
-                state.logs = parsed.myLogs;
-              }
-              if (parsed.challenges) {
-                state.challenges = parsed.challenges;
-              }
-              if (parsed.users) {
-                state.users = parsed.users;
-              }
-              if (parsed.badges) {
-                state.badges = parsed.badges;
-              }
-
-              // عرض الواجهة فوراً من الكاش قبل أي محاولة اتصال
-              syncDash();
-              syncTasbih();
-              syncHonor();
-              syncProfile();
-              syncBadges();
-              
-              // الانتقال للرئيسية
-              go("s-dash");
-            }
-          } catch (e) {
-            console.error("Local load failed:", e);
-          }
-        }
-
-        if (!navigator.onLine) {
-          document.getElementById("offline-screen").style.display = "flex";
-          return;
-        }
-
-        // إظهار واجهات الانتظار (Skeleton) أثناء جلب البيانات
-        if (state.currentUser) {
-            // إذا كان لدينا بيانات كاش، نعرضها بدلاً من السكيلتون لسرعة الاستجابة
-            if (state.challenges.length > 0) {
-                syncDash();
-                syncTasbih();
-            } else {
-                showSkeletons();
-            }
-        }
-
-        // محاولة جلب البيانات من Supabase لتحديث الواجهة
-        try {
-          const {
-            data: { session },
-          } = await db.auth.getSession();
-          const myId = session?.user?.id;
-
-          // 1. جلب بيانات المستخدم الحالي بالكامل أولاً لمعرفة الصلاحيات وملء البيانات الشخصية
-          let myProfile = null;
-          if (myId) {
-            const { data } = await db.from("profiles").select("*").eq("id", myId).single();
-            myProfile = data;
-          }
-
-          const isAdmin = myProfile?.is_admin || false;
-          // للمدير: كل الأعمدة. للمستخدم العادي: أعمدة الهوية فقط (الاسم والأفاتار) للآخرين.
-          const profileCols = isAdmin ? "*" : "id, name, avatar_url";
-
-          const [u, c, p, b, s] = await Promise.all([
-            db.from("profiles").select(profileCols),
-            db
-              .from("challenges")
-              .select("id, title, goal, is_active, participants, end_date"),
-            db.from("progress").select("id, user_id, challenge_id, score"),
-            db.from("badges").select("id, name, icon, target"),
-            db.from("app_settings").select("key, value"),
-          ]);
-
-          if (u.data) {
-            // المحافظة على رصيد الماس المحلي إذا كان هناك عمليات معلقة (قبل تحديث المصفوفة)
-            if (myId && state.pendingActions.length > 0) {
-              const localMe = state.users.find((ux) => ux.id === myId);
-              if (localMe && myProfile) {
-                myProfile.gems = localMe.gems;
-              }
-            }
-            state.users = u.data;
-            // دمج الملف الشخصي الكامل للمستخدم الحالي إذا لم يكن مديراً
-            if (myProfile && !isAdmin) {
-              const myIdx = state.users.findIndex(ux => ux.id === myId);
-              if (myIdx !== -1) {
-                state.users[myIdx] = { ...state.users[myIdx], ...myProfile };
-              } else {
-                state.users.push(myProfile);
-              }
-            }
-          }
-          if (c.data) state.challenges = c.data;
-          if (p.data) {
-            // ملاحظة هامة: لا تصفّر الكائن بالكامل لتجنب تصفير الأرصدة المحلية غير المرفوعة
-            p.data.forEach((item) => {
-                // استخدام مفتاح موحد (user_id_challenge_id) لضمان التوافق مع الهيكلة الحالية
-                const key = item.user_id + "_" + item.challenge_id;
-                // تحديث القيمة من السيرفر فقط (مرجع أساسي)
-                state.progress[key] = item.score;
-                // دعم للمفاتيح القديمة إذا وجدت في السيرفر
-                if (item.id && item.id !== key) state.progress[item.id] = item.score;
-            });
-          }
-
-          // تطبيق العمليات المعلقة فوق بيانات السيرفر لضمان دقة الرقم المعروض
-          if (myId) {
-            state.pendingActions.forEach((act) => {
-              const k = myId + "_" + act.cid;
-              // هنا نضيف فقط ما لم يتم مزامنته بعد لمحاكاة التراكم فوق بيانات السيرفر الحالية
-              state.progress[k] = (state.progress[k] || 0) + act.amount;
-            });
-          }
-          if (b.data) state.badges = b.data;
-          if (s.data) {
-            const msg = s.data.find((x) => x.key === "daily_msg");
-            if (msg) state.dailyMsg = msg.value;
-          }
-
-          if (session) {
-            state.currentUser = state.users.find(
-              (ux) => ux.id === session.user.id,
-            );
-            if (state.currentUser) {
-              // جلب السجلات بناءً على الصلاحيات
-              let logQuery = db
-                .from("logs")
-                .select("id, user_id, challenge_id, type, amount, date_text")
-                .order("created_at", { ascending: false })
-                .limit(100);
-              if (!state.currentUser.is_admin)
-                logQuery = logQuery.eq("user_id", state.currentUser.id);
-              const { data: lData } = await logQuery;
-              if (lData) {
-                const serverLogs = lData.map((log) => ({
-                  ...log,
-                  id: log.id,
-                  userId: log.user_id,
-                  challenge_id: log.challenge_id,
-                  type: log.type,
-                  amount: log.amount,
-                  date: log.date_text,
-                }));
-                // Keep pending local logs that haven't been synced to the server yet
-                const pendingLogs = state.logs.filter((l) => l.is_pending);
-                state.logs = [...pendingLogs, ...serverLogs];
-              }
-
-              save(); // حفظ النسخة الجديدة محلياً
-              go("s-dash");
-            } else {
-              setTimeout(load, 2000);
-            }
-          } else {
-            go("s-login");
-          }
-          setupRealtime();
-        } catch (err) {
-          console.error("Supabase failed:", err);
-          if (!state.currentUser) toast("خطأ في الاتصال ❌");
-        }
-      }
-
-      // مراقبة تغييرات حالة الدخول
-      db.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN") {
-          load().then(() => { if (navigator.onLine) syncPending(); });
-        }
-        if (event === "SIGNED_OUT") {
-          state.currentUser = null;
-          go("s-login");
-        }
-      });
-
-      async function handleLogin() {
-        if (!navigator.onLine) {
-            return toast("لا يمكن تسجيل الدخول بدون إنترنت 📡 حاول مرة أخرى عند الاتصال.");
-        }
-        const btn = document.getElementById("btn-login-action");
-        const originalText = btn.innerText;
-
-        try {
-            btn.innerText = "جاري الدخول... ⏳";
-            btn.disabled = true;
-
-            const email = document.getElementById("login-id").value.trim();
-            const password = document.getElementById("login-pass").value.trim();
-
-            const { data, error } = await db.auth.signInWithPassword({
-              email: email,
-              password: password,
-            });
-
-            if (error) {
-              toast(
-                "خطأ: " +
-                  (error.message === "Invalid login credentials"
-                    ? "بيانات الدخول غير صحيحة ❌"
-                    : error.message),
-              );
-            } else {
-              toast("تم تسجيل الدخول بنجاح ✓");
-            }
-        } catch (e) {
-            toast("حدث خطأ لم نتوقعه ❌");
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-      }
-
-      async function handleLogout() {
-        if (navigator.onLine) {
-           await db.auth.signOut();
-        }
-        // مسح بيانات الجلسة من التخزين المحلي فوراً (يعمل أوفلاين)
-        localStorage.removeItem("million_v19_offline");
-        location.reload();
-      }
-
-      let isSignupMode = false;
-      function toggleAuthMode() {
-        isSignupMode = !isSignupMode;
-        document
-          .getElementById("signup-name")
-          .classList.toggle("hidden", !isSignupMode);
-        document
-          .getElementById("btn-login-action")
-          .classList.toggle("hidden", isSignupMode);
-        document
-          .getElementById("btn-signup-action")
-          .classList.toggle("hidden", !isSignupMode);
-        document.getElementById("toggle-auth-text").innerText = isSignupMode
-          ? "لديك حساب بالفعل؟ سجل دخول"
-          : "ليس لديك حساب؟ سجل الآن";
-
-        // تحسين التذكر التلقائي
-        const passInput = document.getElementById("login-pass");
-        passInput.autocomplete = isSignupMode
-          ? "new-password"
-          : "current-password";
-      }
-
-      async function handleSignup() {
-        const name = document.getElementById("signup-name").value.trim();
-        const email = document.getElementById("login-id").value.trim();
-        const password = document.getElementById("login-pass").value.trim();
-
-        if (!name || !email || !password) return toast("يرجى ملء جميع الخانات");
-
-        const btn = document.getElementById("btn-signup-action");
-        const originalText = btn.innerText;
-
-        try {
-            btn.innerText = "جاري إنشاء الحساب... ⏳";
-            btn.disabled = true;
-
-            const { data, error } = await db.auth.signUp({
-              email,
-              password,
-              options: {
-                data: { name: name },
-              },
-            });
-
-            if (error) {
-              toast("خطأ: " + error.message);
-            } else {
-              toast(
-                "تم إنشاء الحساب! افحص بريدك لتأكيد التسجيل (إذا تم تفعيل التأكيد)",
-              );
-              if (data.user) {
-                toggleAuthMode();
-              }
-            }
-        } catch (e) {
-            toast("حدث خطأ ما ❌");
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-      }
-
-      function setupRealtime() {
-        if (realtimeChannel) return; // منع تكرار الاشتراك
-        // الاستماع لكل التغييرات في الجداول الأساسية
-        realtimeChannel = db.channel("public:all")
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "progress" },
-            (payload) => {
-              if (payload.new) {
-                state.progress[payload.new.id] = payload.new.score;
-                if (
-                  document.getElementById("s-dash").classList.contains("active")
-                )
-                  syncDash();
-                if (
-                  document
-                    .getElementById("s-honor")
-                    .classList.contains("active")
-                )
-                  syncHonor();
-              }
-            },
-          )
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "app_settings" },
-            (payload) => {
-              if (payload.new && payload.new.key === "daily_msg") {
-                state.dailyMsg = payload.new.value;
-                if (
-                  document.getElementById("s-dash").classList.contains("active")
-                )
-                  syncDash();
-              }
-            },
-          )
-          .on(
-            "postgres_changes",
-            { event: "*", schema: "public", table: "challenges" },
-            () => {
-              load();
-            },
-          )
-          .subscribe();
-      }
-
-      function go(id) {
-        document
-          .querySelectorAll(".screen")
-          .forEach((s) => s.classList.remove("active"));
-        document.getElementById(id).classList.add("active");
-
-        const nav = document.getElementById("app-nav");
-        if (id === "s-login") {
-          nav.style.display = "none";
-        } else {
-          nav.style.display = "flex";
-          document
-            .querySelectorAll(".nav-tab")
-            .forEach((n) => n.classList.remove("active"));
-          const tab = document.getElementById("n-" + id.replace("s-", ""));
-          if (tab) tab.classList.add("active");
-        }
-        if (id === "s-dash") syncDash();
-        if (id === "s-tasbih") syncTasbih();
-        if (id === "s-history") syncHistory();
-        if (id === "s-honor") syncHonor();
-        if (id === "s-settings") syncProfile();
-        if (id === "s-badges") syncBadges();
-        syncAdmin();
-      }
-      function navTo(id) {
-        go(id);
-      }
-
-      /* ─── DASHBOARD ─── */
-      function syncDash() {
-        const h = document.getElementById("dash-header");
-        if (!h) return;
-        h.innerHTML = `
-        <div style="display:flex; align-items:center; gap:12px;">
-            <div style="flex-shrink:0;">${getAvatarHTML(state.currentUser, "48px")}</div>
-            <div>
-                <div style="font-weight:700; display:flex; align-items:center; gap:5px;">
-                    ${state.currentUser.name} 
-                    ${state.pendingActions.length > 0 ? '<span title="جاري المزامنة مع السحاب..." style="font-size:0.6rem; animation:rotate 2s linear infinite;">☁️</span>' : ""}
-                    ${!navigator.onLine ? '<span title="وضع الأوفلاين" style="font-size:0.6rem; color:var(--danger);">📡</span>' : ""}
-                </div>
-                ${state.currentUser.is_admin ? `<button onclick="navTo('s-admin')" style="color:var(--primary); font-size:0.6rem; background:none; border:none; border-bottom:1px solid;">لوحة الإدارة</button>` : ""}
-            </div>
-        </div>
-        <div class="pouch-gem">💎 ${ar(state.currentUser.gems || 0)}</div>
-    `;
-
-        // Daily Message + Auto Azkar
-        const msgArea = document.getElementById("daily-msg-area");
-        if (msgArea) {
-          const azkarList = [
-            '"أَلَا بِذِكْرِ اللَّهِ تَطْمَئِنُّ الْقُلُوبُ" - الرعد ٢٨',
-            '"مَن قالَ: سُبحانَ اللهِ وبحَمدِه في يَومٍ مائةَ مرَّةٍ حُطَّتْ خطاياه" - متفق عليه',
-            '"سيد الاستغفار: اللهم أنت ربي لا إله إلا أنت" - البخاري',
-            '"أقرب ما يكون العبد من ربه وهو ساجد فأكثروا الدعاء" - مسلم',
-            '"لا حول ولا قوة إلا بالله كنز من كنوز الجنة" - متفق عليه',
-            '"من لزم الاستغفار جعل الله له من كل ضيق مخرجاً" - أبو داود',
-            '"إن الله يحب العبد التقي الغني الخفي" - مسلم',
-            '"ذكر الله شفاء القلوب" - ابن القيم',
-            '"أحب الكلام إلى الله: سبحان الله وبحمده" - مسلم',
-            "استغفر الآن… فقد يكون فرجك في هذه اللحظة 🤍",
-            "كل استغفار تمحو به ذنب وتفتح به باب رزق 🌿",
-            "لا تؤجل الاستغفار… فربما تكون هذه فرصتك للنجاة",
-            "الاستغفار يغيّر الأقدار بإذن الله… فاستمر ✨",
-            "حين تضيق بك الدنيا… أكثر من الاستغفار 🤲",
-            "استغفارك اليوم هو راحتك غدًا 💛",
-            "باب التوبة مفتوح… فقط قل: أستغفر الله",
-            "ربك يحب أن تغفر… فلا تتردد في العودة إليه ❤️",
-            "كل مرة تقول أستغفر الله… أنت تقترب من الفرج",
-            "الاستغفار حياة للقلب… لا تحرم نفسك منه 🌸",
-            "استغفر ولو كنت تظن أن ذنبك كبير… فربك أكبر",
-            "اجعل لسانك رطبًا بالاستغفار… تنعم بالسكينة ✨",
-            "ربما دعاءك متوقف على استغفار صادق… جرّب الآن",
-            "الاستغفار يمحو الماضي… ويصنع بداية جديدة 🔄",
-            "أنت لا تعلم أي استغفار سيغير حياتك… فلا تتوقف 💫",
-            '"من صلى عليّ صلاة واحدة صلى الله عليه بها عشراً" - مسلم',
-          ];
-          const todayIdx = Math.floor(Date.now() / 60000) % azkarList.length;
-          const autoZikr = azkarList[todayIdx];
-          let html = `<div class="daily-msg" style="margin-bottom:12px;"><div style="font-size:0.65rem; color:var(--text-dim); margin-bottom:4px;">📖 ذكر تحفيزي</div><div class="msg-text" style="font-size:1rem;">${autoZikr}</div></div>`;
-          if (state.dailyMsg)
-            html += `<div class="daily-msg"><div style="font-size:0.65rem; color:var(--fire); margin-bottom:4px;">📢ال رسالة الإدارة مصطفي </div><div class="msg-text">${state.dailyMsg}</div></div>`;
-          msgArea.innerHTML = html;
-        }
-
-        // Switch Challenges Chips
-        const userChallenges = state.challenges.filter(
-          (c) => {
-            const isParticipant = (c.participants && Array.isArray(c.participants) && c.participants.includes(state.currentUser.id));
-            const hasProgress = state.progress && (state.progress[`${state.currentUser.id}_${c.id}`] > 0);
-            const canSee = isParticipant || hasProgress;
-            // في وضع الأوفلاين، نعرض أي تحدي شارك فيه المستخدم سابقاً أو لديه فيه تقدم
-            return canSee && (c.is_active || state.currentUser.is_admin || !navigator.onLine);
-          }
-        );
-        const chips = document.getElementById("dash-chips-area");
-        if (chips) {
-          if (userChallenges.length > 1) {
-            chips.innerHTML = userChallenges
-              .map(
-                (c) => `
-                <div onclick="switchChallenge('${c.id}')" style="flex-shrink:0; padding:6px 16px; border-radius:30px; border:1px solid ${c.id === state.currentChallengeId ? "var(--primary)" : "rgba(255,255,255,0.1)"}; background:${c.id === state.currentChallengeId ? "rgba(201,148,58,0.2)" : "rgba(255,255,255,0.05)"}; color:${c.id === state.currentChallengeId ? "var(--primary-light)" : "var(--text-muted)"}; cursor:pointer; font-size:0.8rem; white-space:nowrap; transition:0.3s;">
-                    ${c.title} ${!c.is_active && state.currentUser.is_admin ? "🚫" : ""}
-                </div>
-            `,
-              )
-              .join("");
-            chips.style.display = "flex";
-          } else {
-            chips.innerHTML = "";
-            chips.style.display = "none";
-          }
-        }
-
-        // محاولة العثور على التحدي الحالي مع مراعاة الأوفلاين
-        const cur = state.challenges.find(
-          (x) =>
-            x.id === state.currentChallengeId &&
-            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
-             state.currentUser.is_admin || 
-             (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)),
-        );
-        
-        // إذا لم نجد التحدي المحفوظ، نأخذ أول تحدي متاح يشارك فيه المستخدم (أو يراه المدير)
-        let activeChal = cur || (state.currentUser.is_admin ? state.challenges.find(c => c.is_active || state.currentUser.is_admin) : userChallenges[0]);
-
-        // ضمان العثور على أي تحدي متاح في وضع الأوفلاين إذا فشلت البحث عن النشط
-        if (!activeChal && !navigator.onLine && state.challenges.length > 0) {
-            activeChal = state.challenges.find(c => state.progress && state.progress[`${state.currentUser.id}_${c.id}`] > 0) || state.challenges[0];
-        }
-
-        if (activeChal) {
-          state.currentChallengeId = activeChal.id;
-          const val =
-            state.progress[`${state.currentUser.id}_${activeChal.id}`] || 0;
-          const pct = Math.min(100, (val / activeChal.goal) * 100).toFixed(1);
-          const rem = Math.max(0, activeChal.goal - val);
-          document.getElementById("hero-card-v3-area").innerHTML = `
-            <div class="hero-card-v3">
-                <div class="hero-svg-box">
-                    <svg class="hero-svg" viewBox="0 0 100 100"><circle class="hero-track" cx="50" cy="50" r="40"></circle><circle class="hero-progress" cx="50" cy="50" r="40" style="stroke-dashoffset: ${238 - (238 * pct) / 100};"></circle></svg>
-                    <div class="hero-pct-text">${ar(Math.floor(pct))}%</div>
-                </div>
-                <div style="flex:1;">
-                    <div style="font-weight:700; color:var(--primary-light); margin-bottom:5px;">${activeChal.title}</div>
-                    <div class="hero-stat-row"><span class="hero-stat-lbl">إنجاز ✅</span><span class="hero-stat-val">${fmt(val)}</span></div>
-                    <div class="hero-stat-row"><span class="hero-stat-lbl">متبقي ✨</span><span class="hero-stat-val" style="color:var(--text);">${fmt(rem)}</span></div>
-                </div>
-            </div>
-            <div id="countdown-live"></div>
-        `;
-          if (activeChal.end_date) startLiveCountdown(activeChal.end_date);
-          renderRanks(activeChal);
-          document.getElementById("rank-title-ui").classList.remove("hidden");
-        } else {
-          document.getElementById("hero-card-v3-area").innerHTML = `
-            <div class="card-master" style="text-align:center; padding:40px 20px;">
-                <div style="font-size:3rem; margin-bottom:15px;">✨</div>
-                <h3 style="color:var(--primary-light);">لا يوجد تحدي حالي</h3>
-                <p style="color:var(--text-muted); font-size:0.9rem;">انتظر انضمامك لتحدي جديد من قبل الإدارة</p>
-            </div>
-        `;
-          document.getElementById("rankings-area-ui").innerHTML = "";
-          document.getElementById("rank-title-ui").classList.add("hidden");
-        }
-      }
-      function renderRanks(chal) {
-        const list = state.users
-          .filter((u) => (chal.participants && Array.isArray(chal.participants) && chal.participants.includes(u.id)) || u.id === state.currentUser.id)
-          .filter((u) => {
-            // Logic for hidden users: Admin sees everyone, users see themselves, else hide if u.isHidden
-            if (state.currentUser.is_admin) return true;
-            if (u.id === state.currentUser.id) return true;
-            return u.is_hidden !== true;
-          })
-          .map((u) => ({
-            ...u,
-            score: state.progress[`${u.id}_${chal.id}`] || 0,
-          }))
-          .sort((a, b) => b.score - a.score);
-
-        if (list.length === 0) {
-          document.getElementById("rankings-area-ui").innerHTML =
-            '<p style="text-align:center; opacity:0.6; padding:10px;">لا يوجد منافسين متاحين للرؤية.</p>';
-          return;
-        }
-        const maxScore = list[0].score;
-        document.getElementById("rankings-area-ui").innerHTML = list
-          .map((u, i) => {
-            const isMe = u.id === state.currentUser.id;
-            const isFirst = i === 0;
-            const gap = maxScore - u.score;
-            const hiddenTag =
-              u.is_hidden && state.currentUser.is_admin
-                ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>'
-                : "";
-            return `
-            <div class="ranking-row ${isMe ? "me" : ""}">
-                <div class="rank-badge">${isFirst ? "🔥" : ar(i + 1)}</div>
-                <div style="width:44px; height:44px; flex-shrink:0;">${getAvatarHTML(u, "44px")}</div>
-                <div style="flex:1;">
-                    <div style="font-weight:700;">${u.name} ${hiddenTag}</div>
-                    <div style="font-size:0.6rem; color:${isFirst ? "var(--accent)" : "var(--danger)"};">${isFirst ? "المتصدر" : "باقٍ لك " + fmt(gap)}</div>
-                </div>
-                <div style="text-align:left;">
-                    <div style="font-family:'Scheherazade New'; font-size:1.5rem; color:var(--primary-light);">${fmt(u.score)}</div>
-                </div>
-            </div>`;
-          })
-          .join("");
-      }
-      function switchChallenge(id) {
-        state.currentChallengeId = id;
-        save();
-        syncDash();
-        toast(
-          "تم التبديل إلى: " + state.challenges.find((c) => c.id === id).title,
-        );
-      }
-
-      /* ─── HISTORY (LOGS) ─── */
-      function syncHistory(adminUserId = null) {
-        const targetId = adminUserId || state.currentUser.id;
-        const history = state.logs
-          .filter((l) => l.userId === targetId)
-          .reverse();
-        const area = document.getElementById("history-list-ui");
-        if (!area) return;
-        area.innerHTML = history.length
-          ? history
-              .map((l) => {
-                const chal = state.challenges.find(
-                  (c) => c.id === l.challengeId,
-                );
-                const chalName = chal ? chal.title : "تحدي عام";
-                return `
-            <div class="log-row ${l.type === "manual" ? "manual" : ""}">
-                <div class="log-info">
-                    <div style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
-                        <span class="log-type" style="margin:0;">${l.type === "manual" ? "💎 رصيد يدوي" : "📿 جلسة سبحة"}</span>
-                        <span style="font-size:0.65rem; padding:2px 8px; background:rgba(255,255,255,0.05); border-radius:8px; color:var(--diamond);">${chalName}</span>
-                    </div>
-                    <div class="log-date">${l.date}</div>
-                </div>
-                <div class="log-amt">${fmt(l.amount)}</div>
-            </div>
-        `;
-              })
-              .join("")
-          : '<p style="text-align:center; opacity:0.6;">لا توجد عمليات مسجلة بعد.</p>';
-      }
-
-      function switchChallenge(id) {
-        state.currentChallengeId = id;
-        save();
-        syncDash();
-        syncTasbih();
-        toast("تم التبديل بنجاح 🔄");
-      }
-
-      /* ─── TASBIH & SAVE ─── */
-      let sessCount = 0;
-      function syncTasbih() {
-        let c = state.challenges.find(
-          (x) =>
-            x.id === state.currentChallengeId &&
-            ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
-             state.currentUser.is_admin ||
-             (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)),
-        );
-        if (!c)
-          c = state.challenges.filter(
-            (x) =>
-              ((x.participants && Array.isArray(x.participants) && x.participants.includes(state.currentUser.id)) || 
-               state.currentUser.is_admin ||
-               (state.progress && state.progress[`${state.currentUser.id}_${x.id}`] > 0)) &&
-              (x.is_active || state.currentUser.is_admin || !navigator.onLine),
-          )[0];
-        if (c) state.currentChallengeId = c.id;
-
-        document.getElementById("t-chal-title-ui").textContent = c
-          ? c.title
-          : "تحدي عام (خارج المنافسة)";
-        document.getElementById("sess-v-ui").innerText = ar(sessCount);
-        document.getElementById("tg-v-ui").innerText = ar(state.subGoal);
-        const pct =
-          sessCount === 0
-            ? 0
-            : sessCount % state.subGoal === 0
-              ? 100
-              : ((sessCount % state.subGoal) / state.subGoal) * 100;
-        document.getElementById("bead-progress-bar").style.strokeDashoffset =
-          754 - (754 * pct) / 100;
-        document.getElementById("bead-pct").innerText =
-          ar(Math.floor(pct)) + "٪";
-        document
-          .querySelectorAll(".goal-btn")
-          .forEach((b) =>
-            b.classList.toggle(
-              "active",
-              b.id === "g-" + state.subGoal ||
-                (b.id === "g-custom" &&
-                  ![33, 100, 1000].includes(state.subGoal)),
-            ),
-          );
-      }
-      function setG(v) {
-        sessCount = 0;
-        state.subGoal = v;
-        save();
-        autoSaveSess();
-        syncTasbih();
-      }
-      function tapSubha() {
-        sessCount++;
-        autoSaveSess();
-        syncTasbih();
-        spawnParticles();
-        if (sessCount % state.subGoal === 0) {
-          if ("vibrate" in navigator)
-            navigator.vibrate([100, 50, 100, 50, 200]);
-          playSound("complete");
-          toast("تم الوصول للورد! ✨");
-        } else {
-          if ("vibrate" in navigator) navigator.vibrate(30);
-          playSound("tap");
-        }
-      }
-      function resetSess() {
-        if (
-          sessCount > 0 &&
-          confirm("هل تريد تصفير العداد الحالي؟ لن يتم حفظه.")
-        ) {
-          sessCount = 0;
-          autoSaveSess();
-          syncTasbih();
-          toast("تم التصفير ↺");
-        } else if (sessCount > 0 === false) {
-          sessCount = 0;
-          autoSaveSess();
-          syncTasbih();
-        }
-      }
-      async function saveW() {
-        if (sessCount <= 0) return;
-        const k = state.currentUser.id + "_" + state.currentChallengeId;
-        const amount = sessCount;
-        const dateText =
-          new Date().toLocaleDateString("ar-EG") +
-          " " +
-          new Date().toLocaleTimeString("ar-EG", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-        // 1. تحديث محلي فوري (للـ Offline)
-        const oldScore = state.progress[k] || 0;
-        const newScore = oldScore + amount;
-        state.progress[k] = newScore;
-        
-        const nG = Math.floor(newScore / 500) - Math.floor(oldScore / 500);
-        if (nG > 0) state.currentUser.gems = (state.currentUser.gems || 0) + nG;
-
-        const actId = 'act_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-        
-        state.logs.unshift({
-          id: actId,
-          userId: state.currentUser.id,
-          challengeId: state.currentChallengeId,
-          type: "subha",
-          amount: amount,
-          date: dateText,
-          is_pending: true,
-        });
-
-        // إضافة للـ Queue للمزامنة لاحقاً
-        state.pendingActions.push({
-          id: actId,
-          type: "save",
-          amount,
-          cid: state.currentChallengeId,
-          dateText,
-          timestamp: Date.now()
-        });
-
-        sessCount = 0;
-        save();
-        autoSaveSess();
-        syncTasbih();
-        syncDash();
-        toast("تم الحفظ محلياً ✓ (سيتم الرفع لاحقاً)");
-          
-        // محاولة المزامنة الفورية إذا كان أونلاين
-        if (navigator.onLine) syncPending();
-      }
-
-      /* ─── MODALS ─── */
-      function openManualModal() {
-        resetManualModal();
-        openModal("m-manual");
-      }
-      function resetManualModal() {
-        document.getElementById("manual-step-input").classList.remove("hidden");
-        document.getElementById("manual-step-confirm").classList.add("hidden");
-        document.getElementById("manual-val").value = "";
-      }
-      function showManualConfirm() {
-        const v = parseInt(document.getElementById("manual-val").value);
-        if (!v || v < 0) return;
-        document.getElementById("confirm-num-display").innerText = fmt(v);
-        document.getElementById("manual-step-input").classList.add("hidden");
-        document
-          .getElementById("manual-step-confirm")
-          .classList.remove("hidden");
-      }
-      async function submitManual() {
-        const v = parseInt(document.getElementById("manual-val").value);
-        if (!v || v < 0) return;
-        const k = state.currentUser.id + "_" + state.currentChallengeId;
-        const dateText =
-          new Date().toLocaleDateString("ar-EG") +
-          " " +
-          new Date().toLocaleTimeString("ar-EG", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-
-        // تحديث محلي فوري
-        const oldScore = state.progress[k] || 0;
-        const newScore = oldScore + v;
-        state.progress[k] = newScore;
-
-        const actId = 'act_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-
-        state.logs.unshift({
-          id: actId,
-          userId: state.currentUser.id,
-          challengeId: state.currentChallengeId,
-          type: "manual",
-          amount: v,
-          date: dateText,
-          is_pending: true,
-        });
-
-        state.pendingActions.push({
-          id: actId,
-          type: "manual",
-          amount: v,
-          cid: state.currentChallengeId,
-          dateText,
-          timestamp: Date.now()
-        });
-
-        save();
-        closeModal("m-manual");
-        syncDash();
-        syncTasbih();
-        toast("تمت الإضافة محلياً ✅");
-
-        if (navigator.onLine) syncPending();
-      }
-
-      /* ─── ADMIN ─── */
-      function syncAdmin() {
-        const cb = document.getElementById("admin-user-checkboxes");
-        if (!cb) return;
-        cb.innerHTML = state.users
-          .map(
-            (u) =>
-              `<label style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><input type="checkbox" value="${u.id}" class="nu-p"> ${u.name}</label>`,
-          )
-          .join("");
-
-        // Badge List
-        const bl = document.getElementById("admin-badge-list-ui");
-        if (bl) {
-          bl.innerHTML = state.badges
-            .map(
-              (b) => `
-            <div style="background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:10px; font-size:0.75rem; display:flex; align-items:center; gap:5px; border:1px solid rgba(255,255,255,0.1);">
-                <span>${b.icon} ${b.name} (${fmt(b.target)})</span>
-                <button onclick="deleteBadge('${b.id}')" style="background:none; border:none; color:var(--danger); cursor:pointer;">×</button>
-            </div>
-        `,
-            )
-            .join("");
-        }
-
-        // Challenges List
-        document.getElementById("admin-challenge-list-ui").innerHTML =
-          state.challenges
-            .map(
-              (c) => `
-        <div class="ranking-row" style="border-right-color: ${c.is_active ? "var(--diamond)" : "var(--danger)"};">
-            <div style="flex:1;">
-                <strong>${c.title}</strong> ${!c.is_active ? '<span style="color:var(--danger); font-size:0.6rem;">(غير نشط 🚫)</span>' : ""}
-                <div style="font-size:0.6rem; color:var(--text-muted);">الهدف: ${fmt(c.goal)} | المشاركين: ${ar(c.participants.length)}</div>
-            </div>
-            <button onclick="editChallenge('${c.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">تعديل✏️</button>
-            <button onclick="deleteChallenge('${c.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; margin-right:8px;">حذف🗑️</button>
-        </div>
-    `,
-            )
-            .join("");
-        document.getElementById("admin-user-list-ui").innerHTML = state.users
-          .map(
-            (u, i) => `
-        <div class="ranking-row">
-            <div style="flex:1;">
-                <strong>${u.name}</strong> ${u.is_hidden ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>' : ""}
-                <div style="font-size:0.6rem; color:var(--text-muted);">رصيد إجمالي: ${fmt(getTotal(u.id))} | الماس: ${ar(u.gems || 0)}</div>
-            </div>
-            <div style="display:flex; gap:8px;">
-                <button onclick="viewUserBehavior('${u.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">السلوك 🔍</button>
-                <button onclick="openEditUser(${i})" style="color:var(--primary-light); background:none; border:none; border-bottom:1px solid; font-size:0.7rem;">تعديل✏️</button>
-            </div>
-        </div>
-    `,
-          )
-          .join("");
-      }
-      function getTotal(uid) {
-        let t = 0;
-        state.challenges.forEach((c) => {
-          if (c.participants.includes(uid))
-            t += state.progress[uid + "_" + c.id] || 0;
-        });
-        return t;
-      }
-      function viewUserBehavior(uid) {
-        navTo("s-history");
-        syncHistory(uid);
-      }
-
-      async function addChallenge() {
-        const t = document.getElementById("nc-title").value,
-          g = parseInt(document.getElementById("nc-goal").value);
-        const act = document.getElementById("nc-active").checked,
-          days = parseInt(document.getElementById("nc-days").value) || 0;
-        const participants = Array.from(
-          document.querySelectorAll(".nu-p:checked"),
-        ).map((cb) => cb.value);
-
-        if (!t || !g) return alert("أكمل بيانات التحدي");
-
-        const end =
-          days > 0
-            ? new Date(Date.now() + days * 86400000).toISOString()
-            : null;
-        const newChal = {
-          id: editingChallengeId || "c" + Date.now(),
-          title: t,
-          goal: g,
-          is_active: act,
-          duration_days: days,
-          end_date: end,
-          participants: participants,
-        };
-
-        if (editingChallengeId) {
-          await db
-            .from("challenges")
-            .update(newChal)
-            .eq("id", editingChallengeId);
-          const idx = state.challenges.findIndex(
-            (x) => x.id === editingChallengeId,
-          );
-          state.challenges[idx] = newChal;
-          editingChallengeId = null;
-          cancelEditChallenge();
-        } else {
-          await db.from("challenges").insert([newChal]);
-          state.challenges.push(newChal);
-        }
-
-        save();
-        syncAdmin();
-        toast("تم حفظ التحدي بنجاح ✨");
-      }
-
-      async function addUser() {
-        const name = document.getElementById("nu-name").value.trim();
-        const email = document.getElementById("nu-email").value.trim();
-        const password = document.getElementById("nu-pass").value.trim();
-        const isHidden = document.getElementById("nu-hidden").checked;
-
-        if (!name || !email || !password)
-          return toast("يرجى ملء جميع خانات المستخدم ⚠️");
-
-        toast("جاري إضافة المستخدم... ⏳");
-
-        // استخدام عميل مؤقت لتجنب تسجيل خروج المدير
-        const tempClient = supabase.createClient(
-          SUPABASE_URL,
-          SUPABASE_ANON_KEY,
-          {
-            auth: { persistSession: false },
-          },
-        );
-
-        const { data, error } = await tempClient.auth.signUp({
-          email,
-          password,
-          options: {
-            data: { name: name },
-          },
-        });
-
-        if (error) {
-          toast("خطأ في الإضافة: " + error.message);
-        } else {
-          // تحديث ملف المستخدم لإضافة حالة الإخفاء
-          if (data.user) {
-            // انتظار قليلاً للتأكد من انتهاء الـ Trigger من إنشاء البروفايل
-            setTimeout(async () => {
-              await db
-                .from("profiles")
-                .update({ is_hidden: isHidden })
-                .eq("id", data.user.id);
-              load(); // تحديث القائمة
-            }, 2000);
-          }
-          toast("تمت إضافة المستخدم بنجاح! ✓");
-          document.getElementById("nu-name").value = "";
-          document.getElementById("nu-email").value = "";
-          document.getElementById("nu-pass").value = "";
-          document.getElementById("nu-hidden").checked = false;
-        }
-      }
-
-      let editingUserId = null;
-      function openEditUser(idx) {
-        const u = state.users[idx];
-        if (!u) return;
-        editingUserId = u.id;
-        document.getElementById("edit-u-name").value = u.name;
-        document.getElementById("edit-u-pass").value = ""; // لا نعرض كلمة السر القديمة
-        document.getElementById("edit-u-gems").value = u.gems || 0;
-        document.getElementById("edit-u-hidden").checked = u.is_hidden || false;
-
-        // إظهار أرصدة التحديات
-        const balArea = document.getElementById("edit-u-balances");
-        balArea.innerHTML =
-          '<h4 style="color:var(--primary); font-size:0.8rem; margin:10px 0;">أرصدة التحديات:</h4>' +
-          state.challenges
-            .map((c) => {
-              const score = state.progress[u.id + "_" + c.id] || 0;
-              return `
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:8px; border-radius:10px;">
-                      <span style="color:var(--text-muted);">${c.title}</span>
-                      <input type="number" class="edit-prog-input" data-cid="${c.id}" value="${score}" style="width:100px; background:#1a1a2e; border:1px solid rgba(255,255,255,0.1); color:var(--text); border-radius:8px; padding:6px 10px; text-align:center;">
-                  </div>
-              `;
-            })
-            .join("");
-
-        openModal("m-edit-user");
-      }
-
-      async function saveUserEdit() {
-        const name = document.getElementById("edit-u-name").value.trim();
-        const gems = parseInt(document.getElementById("edit-u-gems").value) || 0;
-        const isHidden = document.getElementById("edit-u-hidden").checked;
-
-        if (!name) return toast("الاسم مطلوب ⚠️");
-
-        toast("جاري حفظ التعديلات... ⏳");
-
-        // 1. تحديث البروفايل
-        const { error: pErr } = await db
-          .from("profiles")
-          .update({
-            name,
-            gems,
-            is_hidden: isHidden,
-          })
-          .eq("id", editingUserId);
-
-        if (pErr) return toast("خطأ في تحديث البيانات ❌");
-
-        // 2. تحديث تقدم التحديات
-        const progInputs = document.querySelectorAll(".edit-prog-input");
-        for (const input of progInputs) {
-          const cid = input.dataset.cid;
-          const score = parseInt(input.value) || 0;
-          const pid = editingUserId + "_" + cid;
-          await db.from("progress").upsert({
-            id: pid,
-            user_id: editingUserId,
-            challenge_id: cid,
-            score: score,
-          });
-          state.progress[pid] = score;
-        }
-
-        toast("تم تحديث بيانات المستخدم بنجاح ✓");
-        closeModal("m-edit-user");
-        load();
-      }
-
-      async function addBadge() {
-        const icon = document.getElementById("nb-icon").value;
-        const title = document.getElementById("nb-title").value;
-        const target = parseInt(document.getElementById("nb-target").value);
-        if (!icon || !title || !target) return alert("أكمل بيانات الوسام");
-        const newBadge = {
-          id: "b" + Date.now(),
-          name: title,
-          icon: icon,
-          target: target,
-        };
-
-        await db.from("badges").insert([newBadge]);
-        state.badges.push(newBadge);
-
-        document.getElementById("nb-icon").value = "";
-        document.getElementById("nb-title").value = "";
-        document.getElementById("nb-target").value = "";
-        save();
-        syncAdmin();
-        toast("تمت إضافة الوسام بنجاح 🏅");
-      }
-      async function deleteBadge(id) {
-        if (!confirm("حذف الوسام؟")) return;
-        await db.from("badges").delete().eq("id", id);
-        state.badges = state.badges.filter((b) => b.id !== id);
-        save();
-        syncAdmin();
-      }
-
-      let editingChallengeId = null;
-      function editChallenge(id) {
-        const c = state.challenges.find((x) => x.id === id);
-        if (!c) return;
-        editingChallengeId = id;
-        document.getElementById("nc-title").value = c.title;
-        document.getElementById("nc-goal").value = c.goal;
-        document.getElementById("nc-active").checked = c.is_active || false;
-        document.getElementById("nc-days").value = c.duration_days || "";
-        document
-          .querySelectorAll(".nu-p")
-          .forEach((cb) => (cb.checked = c.participants.includes(cb.value)));
-        document.getElementById("admin-chal-form-title").innerText =
-          "تعديل التحدي ✏️";
-        document.getElementById("admin-chal-btn").innerText = "تحديث التحدي 💾";
-        document.getElementById("admin-chal-cancel").classList.remove("hidden");
-        document.getElementById("nc-title").focus();
-      }
-      function cancelEditChallenge() {
-        editingChallengeId = null;
-        document.getElementById("nc-title").value = "";
-        document.getElementById("nc-goal").value = "";
-        document.getElementById("nc-days").value = "";
-        document
-          .querySelectorAll(".nu-p")
-          .forEach((cb) => (cb.checked = false));
-        document.getElementById("nc-active").checked = true;
-        document.getElementById("admin-chal-form-title").innerText =
-          "بدء تحدي جديد 🏆";
-        document.getElementById("admin-chal-btn").innerText = "ابدأ التحدي 🔥";
-        document.getElementById("admin-chal-cancel").classList.add("hidden");
-      }
-      async function deleteChallenge(id) {
-        if (
-          !confirm(
-            "هل أنت متأكد من حذف هذا التحدي؟ سيتم حذف جميع السجلات المتعلقة به.",
-          )
-        )
-          return;
-        await db.from("challenges").delete().eq("id", id);
-        state.challenges = state.challenges.filter((c) => c.id !== id);
-        save();
-        syncAdmin();
-        toast("تم حذف التحدي 🗑️");
-      }
-
-      /* ─── UTILS ─── */
-      function addLog(uid, cid, type, amt) {
-        const now = new Date();
-        const d =
-          now.toLocaleDateString("ar-EG") +
-          " " +
-          now.toLocaleTimeString("ar-EG", {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        state.logs.push({
-          user_id: uid,
-          challenge_id: cid,
-          type: type,
-          amount: amt,
-          date_text: d,
-        });
-      }
-      function ar(n) {
-        return n.toString().replace(/\d/g, (d) => "٠١٢٣٤٥٦٧٨٩"[d]);
-      }
-      function fmt(n) {
-        return ar((n || 0).toLocaleString("en-US"));
-      }
-      function toast(m) {
-        const t = document.getElementById("toast");
-        t.textContent = m;
-        t.style.transform = "translateX(-50%) translateY(0)";
-        setTimeout(
-          () => (t.style.transform = "translateX(-50%) translateY(-120%)"),
-          3000,
-        );
-      }
-      function openModal(id) {
-        document.getElementById(id).style.display = "flex";
-      }
-      function closeModal(id) {
-        document.getElementById(id).style.display = "none";
-      }
-      function applyCustomGoal() {
-        const v = parseInt(document.getElementById("custom-goal-val").value);
-        if (!v || v < 1) return;
-        setG(v);
-        closeModal("m-custom-goal");
-      }
-
-      function showSkeletons() {
-        const currentScreen = document.querySelector(".screen.active")?.id;
-        if (currentScreen !== "s-dash") return;
-
-        const h = document.getElementById("dash-header");
-        if (h) h.innerHTML = `
-          <div style="display:flex; align-items:center; gap:12px; width:100%;">
-            <div class="skeleton" style="width:48px; height:48px; border-radius:50%;"></div>
-            <div style="flex:1;">
-               <div class="skeleton" style="width:120px; height:16px; margin-bottom:8px;"></div>
-               <div class="skeleton" style="width:60px; height:12px;"></div>
-            </div>
-            <div class="skeleton" style="width:80px; height:32px; border-radius:16px;"></div>
-          </div>
-        `;
-        const hero = document.getElementById("hero-card-v3-area");
-        if (hero) hero.innerHTML = `
-          <div class="hero-card-v3" style="opacity:0.4;">
-            <div class="skeleton" style="width:100px; height:100px; border-radius:50%;"></div>
-            <div style="flex:1;">
-               <div class="skeleton" style="width:150px; height:20px; margin-bottom:15px;"></div>
-               <div class="skeleton" style="width:100%; height:14px; margin-bottom:10px;"></div>
-               <div class="skeleton" style="width:80%; height:14px;"></div>
-            </div>
-          </div>
-        `;
-        const ranks = document.getElementById("rankings-area-ui");
-        if (ranks) ranks.innerHTML = Array(3).fill(0).map(() => `
-          <div class="ranking-row" style="opacity:0.3;">
-            <div class="skeleton" style="width:44px; height:44px; border-radius:14px;"></div>
-            <div class="skeleton" style="width:40px; height:40px; border-radius:50%;"></div>
-            <div style="flex:1;">
-               <div class="skeleton" style="width:100px; height:16px; margin-bottom:8px;"></div>
-               <div class="skeleton" style="width:60px; height:10px;"></div>
-            </div>
-            <div class="skeleton" style="width:50px; height:20px;"></div>
-          </div>
-        `).join("");
-      }
-
-      /* ─── PROFILE + BADGES ─── */
-      function getAvatarHTML(u, size = "70px") {
-        if (u.avatar_url) {
-          return `<div style="width:${size}; height:${size}; border-radius:50%; overflow:hidden; border:2px solid var(--primary);"><img src="${u.avatar_url}" style="width:100%; height:100%; object-fit:cover;"></div>`;
-        }
-        return `<div style="width:${size}; height:${size}; background:var(--primary-dark); border-radius:50%; display:flex; align-items:center; justify-content:center; border:2px solid var(--primary); font-size:${parseInt(size) / 3}px;">${u.name.slice(0, 1)}</div>`;
-      }
-
-      function syncProfile() {
-        const u = state.currentUser;
-        const total = getTotal(u.id);
-        document.getElementById("profile-area-ui").innerHTML = `
-        <div style="position:relative; width:100%; max-width:120px; margin:0 auto 15px;">
-            ${getAvatarHTML(u, "100px")}
-            <button onclick="document.getElementById('avatar-input').click()" style="position:absolute; bottom:0; right:50%; transform:translateX(50px); background:var(--primary); border:none; border-radius:50%; width:32px; height:32px; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.5);">📷</button>
-            <input type="file" id="avatar-input" class="hidden" accept="image/*" onchange="uploadAvatar(event)">
-        </div>
-        <h2 style="color:var(--primary-light);">${u.name}</h2>
-        <div class="pouch-gem" style="width:fit-content; margin:15px auto;">💎 الماس: ${ar(u.gems || 0)}</div>
-        <div style="font-size:0.85rem; color:var(--text-dim); margin-bottom:15px;">إجمالي الاستغفار: ${fmt(total)}</div>
-        <h3 style="color:var(--primary-light); font-size:1rem; margin-bottom:10px;">الأوسمة 🏅</h3>
-        <div class="badge-row">${renderBadgesHTML(u.id)}</div>
-    `;
-      }
-
-      function syncBadges() {
-        const bl = document.getElementById("all-badges-list-ui");
-        if (!bl) return;
-
-        // ترتيب الأوسمة حسب الهدف ومجموع الأعمال
-        const sorted = [...state.badges].sort((a, b) => a.target - b.target);
-        const total = getTotal(state.currentUser.id);
-
-        bl.innerHTML = sorted
-          .map((b) => {
-            const has = total >= b.target;
-            const progress = Math.min(100, (total / b.target) * 100).toFixed(1);
-            return `
-                <div class="card-master" style="border: 1px solid ${has ? "var(--primary)" : "rgba(255,255,255,0.05)"}; background: ${has ? "rgba(201,148,58,0.05)" : "var(--card-bg)"};">
-                    <div style="display:flex; align-items:center; gap:15px;">
-                        <div style="font-size:2.5rem; opacity:${has ? 1 : 0.3}; filter:${has ? "" : "grayscale(1)"};">${b.icon}</div>
-                        <div style="flex:1;">
-                            <div style="font-weight:700; color:${has ? "var(--primary-light)" : "var(--text-muted)"};">${b.name}</div>
-                            <div style="font-size:0.75rem; color:var(--text-dim);">الهدف: ${fmt(b.target)}</div>
-                            ${
-                              !has
-                                ? `
-                                <div style="margin-top:8px; height:4px; background:rgba(255,255,255,0.05); border-radius:2px; overflow:hidden;">
-                                    <div style="width:${progress}%; height:100%; background:var(--primary); transition:0.5s;"></div>
-                                </div>
-                                <div style="font-size:0.6rem; text-align:left; margin-top:4px; color:var(--text-dim);">اكتمل ${ar(Math.floor(progress))}%</div>
-                            `
-                                : '<div style="font-size:0.7rem; color:var(--accent); margin-top:4px;">✓ تم الحصول عليه بنجاح</div>'
-                            }
-                        </div>
-                    </div>
-                </div>
-            `;
-          })
-          .join("");
-      }
-
-      async function uploadAvatar(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        if (file.size > 2 * 1024 * 1024)
-          return toast("حجم الصورة كبير جداً (الأقصى 2MB)");
-
-        toast("جاري الرفع... ⏳");
-        const u = state.currentUser;
-        const fileExt = file.name.split(".").pop();
-        // المسار يجب أن يبدأ بـ ID المستخدم ليتطابق مع سياسة الأمان
-        const filePath = `${u.id}/${Date.now()}.${fileExt}`;
-
-        try {
-          const { error: uploadError } = await db.storage
-            .from("avatars")
-            .upload(filePath, file);
-          if (uploadError) throw uploadError;
-
-          const {
-            data: { publicUrl },
-          } = db.storage.from("avatars").getPublicUrl(filePath);
-
-          const { error: updateError } = await db
-            .from("profiles")
-            .update({ avatar_url: publicUrl })
-            .eq("id", u.id);
-          if (updateError) throw updateError;
-
-          state.currentUser.avatar_url = publicUrl;
-          toast("تم تحديث الصورة بنجاح! ✨");
-          syncProfile();
-          syncDash();
-        } catch (err) {
-          console.error("Avatar upload error:", err);
-          const msg = err.message || "خطأ غير معروف";
-          toast(`خطأ: ${msg} ❌`);
-        }
-      }
-      function getUserBadges(uid) {
-        const total = getTotal(uid);
-        const userBadges = state.badges.map((b) => ({
-          ...b,
-          earned: total >= b.target,
-        }));
-        return userBadges;
-      }
-      function renderBadgesHTML(uid) {
-        return getUserBadges(uid)
-          .map(
-            (b) => `
-        <div class="badge-item ${b.earned ? "earned" : "locked"}">
-            <span class="badge-icon">${b.icon}</span>
-            <span class="badge-label">${b.name}<br>${fmt(b.target)}</span>
-        </div>
-    `,
-          )
-          .join("");
-      }
-      function getEarnedBadgeIcons(uid) {
-        return getUserBadges(uid)
-          .filter((b) => b.earned)
-          .map((b) => b.icon)
-          .join(" ");
-      }
-
-      /* ─── HONOR BOARD ─── */
-      function syncHonor() {
-        const sorted = state.users
-          .filter((u) => !u.is_hidden)
-          .map((u) => ({ ...u, score: getTotal(u.id) }))
-          .sort((a, b) => b.score - a.score)
-          .slice(0, 10);
-        const area = document.getElementById("honor-board-ui");
-        if (!area) return;
-        area.innerHTML =
-          sorted
-            .map((u, i) => {
-              const earnedIcons = getEarnedBadgeIcons(u.id);
-              return `
-        <div class="ranking-row" style="background: rgba(255,255,255,0.02); border-right-color: ${i < 3 ? "var(--fire)" : "var(--primary)"};">
-            <div class="rank-badge" style="font-size:1.4rem;">${i === 0 ? "👑" : i === 1 ? "🥈" : i === 2 ? "🥉" : ar(i + 1)}</div>
-            <div style="width:40px; height:40px; flex-shrink:0;">${getAvatarHTML(u, "40px")}</div>
-            <div style="flex:1;">
-                <div style="font-weight:700; color:${i === 0 ? "var(--primary-light)" : "var(--text)"};">${u.name}</div>
-                <div style="font-size:0.7rem; letter-spacing:2px;">${earnedIcons || '<span style="color:var(--text-dim); font-size:0.6rem;">لا أوسمة بعد</span>'}</div>
-            </div>
-            <div style="font-family:'Scheherazade New', serif; font-size:1.4rem; color:var(--primary-light);">${fmt(u.score)}</div>
-        </div>
-    `;
-            })
-            .join("") ||
-          '<p style="text-align:center;">لا يوجد بيانات بعد.</p>';
-      }
-
-      /* ─── AUDIO SYSTEM ─── */
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      let audioCtx = null;
-      function ensureAudio() {
-        if (!audioCtx) audioCtx = new AudioCtx();
-      }
-      function playSound(type) {
-        if (!state.soundOn) return;
-        ensureAudio();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        if (type === "tap") {
-          osc.frequency.value = 800;
-          osc.type = "sine";
-          gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            audioCtx.currentTime + 0.08,
-          );
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.08);
-        } else {
-          osc.frequency.value = 523;
-          osc.type = "triangle";
-          gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-          osc.frequency.setValueAtTime(659, audioCtx.currentTime + 0.15);
-          osc.frequency.setValueAtTime(784, audioCtx.currentTime + 0.3);
-          gain.gain.exponentialRampToValueAtTime(
-            0.001,
-            audioCtx.currentTime + 0.5,
-          );
-          osc.start();
-          osc.stop(audioCtx.currentTime + 0.5);
-        }
-      }
-      function toggleSound() {
-        state.soundOn = !state.soundOn;
-        save();
-        document.getElementById("sound-toggle-btn").textContent = state.soundOn
-          ? "🔊"
-          : "🔇";
-        toast(state.soundOn ? "الصوت مفعل" : "الصوت موقف");
-      }
-
-      /* ─── PARTICLES ─── */
-      function spawnParticles() {
-        const btn = document.querySelector(".bead-core");
-        if (!btn) return;
-        const rect = btn.getBoundingClientRect();
-        const cx = rect.left + rect.width / 2,
-          cy = rect.top + rect.height / 2;
-        for (let i = 0; i < 6; i++) {
-          const p = document.createElement("div");
-          p.className = "particle";
-          const angle = Math.random() * Math.PI * 2,
-            dist = 40 + Math.random() * 60;
-          const color = ["#ffd700", "#c9943a", "#f5dfa0", "#ff6b35"][
-            Math.floor(Math.random() * 4)
-          ];
-          const size = 4 + Math.random() * 4;
-          p.style.cssText = `left:${cx}px;top:${cy}px;width:${size}px;height:${size}px;background:${color};--px:${Math.cos(angle) * dist}px;--py:${Math.sin(angle) * dist}px;`;
-          document.body.appendChild(p);
-          setTimeout(() => p.remove(), 1000);
-        }
-      }
-
-      /* ─── AUTO-SAVE SESSION ─── */
-      function autoSaveSess() {
-        localStorage.setItem(
-          "_autoSess",
-          JSON.stringify({
-            count: sessCount,
-            chalId: state.currentChallengeId,
-          }),
-        );
-      }
-      function restoreAutoSess() {
-        const d = localStorage.getItem("_autoSess");
-        if (d) {
-          const o = JSON.parse(d);
-          sessCount = o.count || 0;
-          if (o.chalId) state.currentChallengeId = o.chalId;
-        }
-      }
-
-      /* ─── LIVE COUNTDOWN ─── */
-      let countdownInterval = null;
-      function startLiveCountdown(endDateStr) {
-        if (countdownInterval) clearInterval(countdownInterval);
-        function update() {
-          const el = document.getElementById("countdown-live");
-          if (!el) {
-            clearInterval(countdownInterval);
-            return;
-          }
-          const diff = new Date(endDateStr) - new Date();
-          if (diff <= 0) {
-            el.innerHTML =
-              '<div class="countdown-bar"><span style="color:var(--danger); font-size:0.85rem;">⏰ انتهى الوقت!</span></div>';
-            clearInterval(countdownInterval);
-            return;
-          }
-          const d = Math.floor(diff / 86400000),
-            h = Math.floor((diff % 86400000) / 3600000),
-            m = Math.floor((diff % 3600000) / 60000),
-            s = Math.floor((diff % 60000) / 1000);
-          el.innerHTML = `<div class="countdown-bar"><span style="font-size:0.8rem; color:var(--text-muted);">⏳ الوقت المتبقي</span><span class="countdown-val">${ar(d)} يوم ${ar(h)} ساعة ${ar(m)} دقيقة ${ar(s)} ثانية</span></div>`;
-        }
-        update();
-        countdownInterval = setInterval(update, 1000);
-      }
-
-      /* ─── DAILY MSG ─── */
-      async function saveDailyMsg() {
-        state.dailyMsg = document.getElementById("admin-daily-msg").value;
-        await db
-          .from("app_settings")
-          .upsert({ key: "daily_msg", value: state.dailyMsg });
-        save();
-        toast("تم نشر الرسالة ");
-        syncDash();
-      }
-
-      document.addEventListener("keydown", (e) => {
-        if (
-          (e.code === "Space" || e.code === "Enter") &&
-          document.getElementById("s-tasbih").classList.contains("active")
-        ) {
-          e.preventDefault();
-          tapSubha();
-        }
-      });
-      restoreAutoSess();
-      load().then(() => { if (navigator.onLine) syncPending(); });
-      async function syncPending() {
-        if (!navigator.onLine || state.pendingActions.length === 0) return;
-        
-        // منع التشغيل المتوازي (Race Condition)
-        if (state.isSyncing || syncLockPromise) return syncLockPromise;
-
-        syncLockPromise = (async () => {
-          state.isSyncing = true;
-          syncDash(); // تحديث أيقونة السحاب
-
-          try {
-            while (state.pendingActions.length > 0) {
-              const act = state.pendingActions[0];
-              
-              // التحقق من صلاحية المحاولة (تجنب العمليات المتكررة جداً)
-              if (act.lastTry && Date.now() - act.lastTry < 5000) {
-                 break; 
-              }
-              act.lastTry = Date.now();
-
-              const k = state.currentUser.id + "_" + act.cid;
-
-              // 1. إضافة السجل
-              await db.from("logs").insert([
-                {
-                  user_id: state.currentUser.id,
-                  challenge_id: act.cid,
-                  type: act.type === "save" ? "subha" : "manual",
-                  amount: act.amount,
-                  date_text: act.dateText,
-                },
-              ]);
-
-              // 2. تحديث الإجمالي (Upsert) - جلب الرصيد الحالي من السيرفر أولاً لتجنب حك (Overwrite) الأرصدة القديمة
-              const { data: currentSrv } = await db.from("progress").select("score").eq("id", k).single();
-              const serverBase = currentSrv ? currentSrv.score : 0;
-              const newTotal = serverBase + act.amount;
-              
-              await db.from("progress").upsert({
-                id: k,
-                user_id: state.currentUser.id,
-                challenge_id: act.cid,
-                score: newTotal,
-              });
-
-              // مزامنة حالة الألماس (اختياري، يمكن تحسينه)
-              state.progress[k] = newTotal; // تحديث محلي لضمان انسجام الأرقام بعد المزامنة
-
-              // 3. تحديث الألماس
-              await db
-                .from("profiles")
-                .update({ gems: state.currentUser.gems })
-                .eq("id", state.currentUser.id);
-
-              // تم بنجاح، نحذفه من القائمة وتحديث حالة السجل المحلي
-              const syncedActionId = state.pendingActions[0].id;
-              const logItem = state.logs.find((l) => l.is_pending && l.id === syncedActionId);
-              if (logItem) delete logItem.is_pending;
-              
-              state.pendingActions.shift();
-              save();
-            }
-          } catch (e) {
-            console.error("Sync error:", e);
-            
-            // إضافة منطق إعادة المحاولة بذكاء
-            if (state.pendingActions.length > 0) {
-              const currentAct = state.pendingActions[0];
-              currentAct.retryCount = (currentAct.retryCount || 0) + 1;
-              
-              if (currentAct.retryCount >= 3) {
-                 toast("فشل مزامنة بعض البيانات بعد 3 محاولات ⚠️");
-                 state.pendingActions.shift(); // تجاوز هذه العملية لتجنب الحظر الكامل
-                 save();
-              } else {
-                 toast(`فشل المزامنة.. سنحاول مرة أخرى قريباً (محاولة ${currentAct.retryCount})`);
-              }
-            }
-          } finally {
-            state.isSyncing = false;
-            syncDash();
-          }
-        })();
-
-        try {
-          await syncLockPromise;
-        } finally {
-          syncLockPromise = null;
-        }
-      }
-
-      // مراقبة الاتصال
-      window.addEventListener("online", () => {
-        document.getElementById("offline-screen").style.display = "none";
-        toast("تم استعادة الاتصال 📶");
-        syncPending();
-      });
-      window.addEventListener("offline", () => {
-        document.getElementById("offline-screen").style.display = "flex";
-        toast("انقطع الاتصال.. يجب الاتصال بالإنترنت 📡");
-      });
-
-      // التحقق الأولي من الاتصال
-      if (!navigator.onLine) {
-        document.getElementById("offline-screen").style.display = "flex";
-      }
-
-      if (state.soundOn === undefined) state.soundOn = true;
-      // تسجيل الـ Service Worker لتمكين تثبيت التطبيق
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker
-            .register("sw.js")
-            .then((reg) => console.log("SW Registered"))
-            .catch((err) => console.log("SW Failed"));
-        });
-      }
-
-      // منطق تثبيت التطبيق (PWA Install)
-      window.addEventListener("beforeinstallprompt", (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        const btn = document.getElementById("pwa-install-btn");
-        if (btn) btn.style.display = "block";
-      });
-
-      async function installApp() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === "accepted") {
-          console.log("User accepted the install prompt");
-        }
-        deferredPrompt = null;
-        const btn = document.getElementById("pwa-install-btn");
-        if (btn) btn.style.display = "none";
-      }
-
-      // التحقق من آيفون لإظهار إرشادات
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
-      if (isIOS && !isStandalone) {
-        const msg = document.getElementById("ios-install-msg");
-        if (msg) msg.style.display = "block";
-      }
-    </script>
+    </div>
+
+    <!-- Screen Log: History (Visible from behavior) -->
+    <section id="s-history" class="screen">
+      <header
+        style="
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+        "
+      >
+        <h2 style="color: var(--primary-light)">سجل العمليات 📜</h2>
+        <button
+          onclick="navTo('s-dash')"
+          style="
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            padding: 5px 15px;
+            border-radius: 10px;
+            color: var(--text-muted);
+            font-family: inherit;
+          "
+        >
+          رجوع
+        </button>
+      </header>
+      <div id="history-list-ui"></div>
+    </section>
+
+    <!-- Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Modular JS Files -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/tasbih.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/main.js"></script>
   </body>
 </html>
