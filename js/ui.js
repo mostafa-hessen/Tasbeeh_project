@@ -302,7 +302,7 @@ function syncHistory(adminUserId = null) {
   area.innerHTML = history.length
     ? history
       .map((l) => {
-        const chal = state.challenges.find((c) => c.id === l.challengeId);
+        const chal = state.challenges.find((c) => c.id === (l.challengeId || l.challenge_id));
         const chalName = chal ? chal.title : "تحدي عام";
         return `
           <div class="log-row ${l.type === "manual" ? "manual" : ""}">
