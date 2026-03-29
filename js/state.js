@@ -35,6 +35,7 @@ function save() {
     challenges: state.challenges,
     users: state.users,
     badges: state.badges,
+    checklistProgress: state.checklistProgress,
   };
 
   localStorage.setItem("million_v19_offline", JSON.stringify(saveData));
@@ -64,6 +65,7 @@ async function load() {
         if (parsed.challenges) state.challenges = parsed.challenges;
         if (parsed.users) state.users = parsed.users;
         if (parsed.badges) state.badges = parsed.badges;
+        if (parsed.checklistProgress) state.checklistProgress = parsed.checklistProgress;
 
         // UI immediate update from cache
         if (typeof syncDash === "function") syncDash();
@@ -112,14 +114,15 @@ async function load() {
     const isAdmin = myProfile?.is_admin || false;
     const profileCols = isAdmin ? "*" : "id, name, avatar_url";
 
-    const [u, c, p, b, s] = await Promise.all([
+    const [u, c, p, b, settings, cp] = await Promise.all([
       db.from("profiles").select(profileCols),
       db
         .from("challenges")
-        .select("id, title, goal, is_active, participants, end_date"),
+        .select("id, title, goal, is_active, participants, start_date, end_date, phrase, type, checklist_data, created_at"),
       db.from("progress").select("id, user_id, challenge_id, score"),
       db.from("badges").select("id, name, icon, target"),
       db.from("app_settings").select("key, value"),
+      db.from("checklist_progress").select("user_id, challenge_id, item_id")
     ]);
 
     if (u.data) {
@@ -157,9 +160,15 @@ async function load() {
     }
 
     if (b.data) state.badges = b.data;
-    if (s.data) {
-      const msg = s.data.find((x) => x.key === "daily_msg");
+    if (settings.data) {
+      const msg = settings.data.find((x) => x.key === "daily_msg");
       if (msg) state.dailyMsg = msg.value;
+    }
+
+    if (cp.data) {
+      state.checklistProgress = cp.data;
+    } else {
+      state.checklistProgress = [];
     }
 
     if (session) {

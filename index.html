@@ -127,6 +127,7 @@
         ></div>
 
         <div id="hero-card-v3-area"></div>
+        <div class="live-countdown-el" style="margin-bottom: 20px"></div>
 
         <h3
           id="rank-title-ui"
@@ -145,10 +146,13 @@
 
       <!-- Screen: Tasbih -->
       <section id="s-tasbih" class="screen">
+        <div id="tasbih-lock-overlay" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; z-index:1000; justify-content:center; align-items:center; background:rgba(0,0,0,0.4); backdrop-filter:blur(5px);"></div>
+        
         <header style="text-align: center; margin-bottom: 25px">
           <h3 id="t-chal-title-ui" style="color: var(--primary-light)">
             جاري التحميل...
           </h3>
+          <div class="live-countdown-el" style="margin-top: 5px"></div>
         </header>
 
         <div class="card-master" style="padding: 15px">
@@ -281,7 +285,16 @@
         >
           مجلس الشرف 🏆
         </h2>
+        
+        <!-- New: Previous Winner Section -->
+        <div id="previous-winner-ui" style="margin-bottom: 30px;"></div>
+
         <div id="honor-board-ui"></div>
+
+        <h3 style="margin: 30px 0 15px; color: var(--text-muted); font-size: 1rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px; display: flex; align-items: center; gap: 8px;">
+          <span>الأرشيف والتصاميم الماضية</span> 📚
+        </h3>
+        <div id="challenge-archive-ui"></div>
       </section>
 
       <!-- Screen: Badges -->
@@ -335,13 +348,9 @@
               border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             "
           >
-            لتثبيت التطبيق على iPhone: اضغط
-            <img
-              src="https://web-assets.bc.googleusercontent.com/images/ios-share.png"
-              height="18"
-              style="vertical-align: middle"
-            />
-            ثم "Add to Home Screen"
+            لتثبيت التطبيق على iPhone: اضغط على أيقونة المشاركة (Share)
+            <span style="font-size: 1.2rem; vertical-align: middle; margin: 0 5px;">⎋</span>
+            ثم اختر "Add to Home Screen" أو "إضافة إلى الشاشة الرئيسية"
           </div>
           <button
             onclick="handleLogout()"
@@ -399,147 +408,85 @@
           </button>
         </div>
 
-        <!-- Admin: Challenge Management -->
-        <div class="card-master" style="padding: 18px">
-          <h4 id="admin-chal-form-title" style="margin-bottom: 15px">
-            بدء تحدي جديد 🏆
-          </h4>
-          <input
-            type="text"
-            id="nc-title"
-            class="input-field"
-            placeholder="عنوان التحدي (مثلاً: السباق الرمضاني)"
-          />
-          <input
-            type="number"
-            id="nc-goal"
-            class="input-field"
-            placeholder="الهدف الكلي (مثلاً: ١٠٠٬٠٠٠)"
-          />
-          <input
-            type="number"
-            id="nc-days"
-            class="input-field"
-            placeholder="المدة بالأيام (اختياري)"
-          />
-
-          <div style="margin-bottom: 15px">
-            <label style="font-size: 0.75rem; color: var(--text-muted)"
-              >المشاركين:</label
-            >
-            <div
-              id="admin-user-checkboxes"
-              style="
-                margin-top: 8px;
-                max-height: 120px;
-                overflow-y: auto;
-                background: rgba(0, 0, 0, 0.2);
-                padding: 10px;
-                border-radius: 12px;
-              "
-            ></div>
-          </div>
-
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              margin-bottom: 15px;
-              cursor: pointer;
-              font-size: 0.85rem;
-            "
-          >
-            <input type="checkbox" id="nc-active" checked /> تحدي نشط للجميع
-          </label>
-
-          <div style="display: flex; gap: 8px">
-            <button
-              id="admin-chal-btn"
-              onclick="addChallenge()"
-              class="btn-royal"
-              style="padding: 12px"
-            >
-              ابدأ التحدي 🔥
-            </button>
-            <button
-              id="admin-chal-cancel"
-              onclick="cancelEditChallenge()"
-              class="btn-royal hidden"
-              style="background: var(--text-dim); padding: 12px"
-            >
-              إلغاء
-            </button>
-          </div>
+        <!-- Admin Tabs Header -->
+        <div class="admin-tabs">
+          <button class="admin-tab-btn active" onclick="switchAdminTab('chals')">🏆 التحديات</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('users')">👥 المستخدمين</button>
+          <button class="admin-tab-btn" onclick="switchAdminTab('settings')">⚙️ الإعدادات</button>
         </div>
 
-        <!-- Admin: List of Challenges -->
-        <h4 style="margin: 10px 0; color: var(--text-muted)">
-          التحديات الحالية:
-        </h4>
-        <div id="admin-challenge-list-ui"></div>
+        <!-- Tab 1: Challenges -->
+        <div id="atab-chals" class="admin-tab-panel active">
+          <div class="card-master" style="padding: 18px">
+            <h4 id="admin-chal-form-title" style="margin-bottom: 20px; color: var(--primary-light)">
+                إدارة التحديات 🏆
+            </h4>
+            <input type="text" id="nc-title" class="input-field" placeholder="عنوان التحدي (مثلاً: السباق الرمضاني)" />
+            <div style="display:flex; gap:10px;">
+                <input type="number" id="nc-goal" class="input-field" placeholder="الهدف الكلي" />
+                <input type="number" id="nc-days" class="input-field" placeholder="المدة بالأيام" />
+            </div>
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1;">
+                    <label style="font-size: 0.7rem; color: var(--text-muted); padding-right:10px;">تاريخ البدء:</label>
+                    <input type="datetime-local" id="nc-start" class="input-field" />
+                </div>
+            </div>
+            <input type="text" id="nc-phrase" class="input-field" placeholder="الذكر المرتبط" value="أستغفر الله" />
+            
+            <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; display:block;">نوع التحدي:</label>
+            <select id="nc-type" class="input-field" style="background: #1a1a2e;">
+              <option value="count">تحدي عدّاد (أرقام)</option>
+              <option value="checklist">تحدي مهام (قائمة مهام/أيام)</option>
+              <option value="mixed">تحدي مزدوج (أرقام + مهام)</option>
+            </select>
+            
+            <textarea id="nc-checklist" class="input-field" style="height:120px; resize:vertical; display:none;" placeholder="قائمة المهام (كل مهمة في سطر)&#10;اليوم الأول&#10;اليوم الثاني"></textarea>
 
-        <hr style="opacity: 0.05; margin: 25px 0" />
+            <div style="margin-bottom: 20px">
+              <label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-bottom:10px;">المشاركين:</label>
+              <div id="admin-user-checkboxes" style="max-height: 140px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 16px; border:1px solid rgba(255,255,255,0.05);"></div>
+            </div>
 
-        <!-- Admin: Management of Public Message -->
-        <div class="card-master" style="padding: 18px">
-          <h4 style="margin-bottom: 15px">رسالة الإدارة 📢</h4>
-          <textarea
-            id="admin-daily-msg"
-            class="input-field"
-            style="height: 80px; resize: none"
-            placeholder="اكتب رسالة تظهر للجميع..."
-          ></textarea>
-          <button
-            onclick="saveDailyMsg()"
-            class="btn-royal"
-            style="padding: 12px"
-          >
-            نشر الرسالة
-          </button>
+            <label style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; cursor: pointer; font-size: 0.9rem;">
+              <input type="checkbox" id="nc-active" checked style="width:18px; height:18px;"> تحدي نشط للجميع
+            </label>
+
+            <div style="display: flex; gap: 10px">
+              <button id="admin-chal-btn" onclick="addChallenge()" class="btn-royal" style="padding: 15px">ابدأ التحدي 🔥</button>
+              <button id="admin-chal-cancel" onclick="cancelEditChallenge()" class="btn-royal hidden" style="background: var(--text-dim); padding: 15px">إلغاء</button>
+            </div>
+          </div>
+
+          <h4 class="admin-section-title"><span>📋</span> سجل التحديات</h4>
+          <div id="admin-challenge-list-ui"></div>
         </div>
 
-        <!-- Admin: User Management -->
-        <h4 style="margin: 20px 0 10px; color: var(--text-muted)">
-          إدارة المستخدمين:
-        </h4>
-        <div id="admin-user-list-ui"></div>
+        <!-- Tab 2: Users -->
+        <div id="atab-users" class="admin-tab-panel">
+          <h4 class="admin-section-title"><span>👥</span> إدارة المستخدمين</h4>
+          <div id="admin-user-list-ui"></div>
+        </div>
 
-        <hr style="opacity: 0.05; margin: 25px 0" />
-
-        <!-- Admin: Badges Management -->
-        <div class="card-master" style="padding: 18px">
-          <h4 style="margin-bottom: 15px">إضافة وسام جديد 🏅</h4>
-          <div style="display: flex; gap: 8px">
-            <input
-              type="text"
-              id="nb-icon"
-              class="input-field"
-              style="flex: 1"
-              placeholder="أيقونة (💎)"
-            />
-            <input
-              type="text"
-              id="nb-title"
-              class="input-field"
-              style="flex: 3"
-              placeholder="اسم الوسام"
-            />
+        <!-- Tab 3: Settings -->
+        <div id="atab-settings" class="admin-tab-panel">
+          <div class="card-master" style="padding: 18px">
+            <h4 style="margin-bottom: 15px; color: var(--primary-light)">رسالة اليوم 📢</h4>
+            <textarea id="admin-daily-msg" class="input-field" style="height: 100px; resize: none" placeholder="اكتب رسالة تظهر لجميع سابحين المليون..."></textarea>
+            <button onclick="saveDailyMsg()" class="btn-royal" style="padding: 15px">نشر الرسالة</button>
           </div>
-          <input
-            type="number"
-            id="nb-target"
-            class="input-field"
-            placeholder="الرصيد المطلوب (مثلاً: ٥٠٬٠٠٠)"
-          />
-          <button onclick="addBadge()" class="btn-royal" style="padding: 12px">
-            إضافة الوسام
-          </button>
 
-          <div
-            id="admin-badge-list-ui"
-            style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px"
-          ></div>
+          <div class="card-master" style="padding: 18px; margin-top:20px;">
+            <h4 style="margin-bottom: 15px; color: var(--primary-light)">إضافة وسام جديد 🏅</h4>
+            <div style="display: flex; gap: 8px">
+              <input type="text" id="nb-icon" class="input-field" style="flex: 1" placeholder="أيقونة (💎)"/>
+              <input type="text" id="nb-title" class="input-field" style="flex: 3" placeholder="اسم الوسام"/>
+            </div>
+            <input type="number" id="nb-target" class="input-field" placeholder="الرصيد المطلوب (مثلاً: ٥٠٬٠٠٠)"/>
+            <button onclick="addBadge()" class="btn-royal" style="padding: 15px">إضافة الوسام</button>
+
+            <div id="admin-badge-list-ui" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px"></div>
+          </div>
         </div>
       </section>
 
@@ -730,6 +677,31 @@
             إلغاء
           </button>
         </div>
+      </div>
+    </div>
+
+    <!-- Modal: Task Confirmation -->
+    <div id="m-confirm-task" class="overlay-mask">
+      <div class="modal-win" style="text-align: center;">
+        <div style="font-size: 3.5rem; margin-bottom: 10px;">🌿</div>
+        <h2 style="color: var(--primary-light); margin-bottom: 15px;">تأكيد الإنجاز</h2>
+        <p id="confirm-task-msg" style="color: var(--text); font-size: 1.1rem; line-height: 1.6; margin-bottom: 25px;"></p>
+        
+        <div style="display: flex; gap: 12px;">
+          <button id="btn-confirm-task-yes" class="btn-royal" style="background: var(--accent); color: white; padding: 15px;">نعم، أتممته بنجاح ✅</button>
+          <button onclick="closeModal('m-confirm-task')" class="btn-royal" style="background: var(--text-dim); padding: 15px;">ليس بعد</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Who Finished -->
+    <div id="m-task-participants" class="overlay-mask">
+      <div class="modal-win">
+        <h3 id="task-participants-title" style="color: var(--primary-light); margin-bottom: 20px;">من أنجز المهمة؟ 🌿</h3>
+        <div id="task-participants-list" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;">
+          <!-- List injected here -->
+        </div>
+        <button onclick="closeModal('m-task-participants')" class="btn-royal" style="margin-top: 20px; background: var(--text-dim); padding: 12px;">إغلاق</button>
       </div>
     </div>
 

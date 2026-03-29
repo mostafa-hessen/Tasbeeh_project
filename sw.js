@@ -25,7 +25,10 @@ self.addEventListener('fetch', (e) => {
     // استراتيجية التخزين أولاً للأصول الثابتة (Static Assets)
     e.respondWith(
         caches.match(e.request).then((response) => {
-            return response || fetch(e.request);
+            return response || fetch(e.request).catch(() => {
+                // If both fail, return a generic error or empty response
+                return new Response('Offline: Resource not found');
+            });
         })
     );
 });

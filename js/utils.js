@@ -97,18 +97,19 @@ function spawnParticles() {
 
 // Countdown logic
 let countdownInterval = null;
-function startLiveCountdown(endDateStr) {
+function startLiveCountdown(endDateStr, customLabel = "الوقت المتبقي") {
   if (countdownInterval) clearInterval(countdownInterval);
   function update() {
-    const el = document.getElementById("countdown-live");
-    if (!el) {
+    const els = document.querySelectorAll(".live-countdown-el");
+    if (els.length === 0) {
       clearInterval(countdownInterval);
       return;
     }
     const diff = new Date(endDateStr) - new Date();
     if (diff <= 0) {
-      el.innerHTML =
-        '<div class="countdown-bar"><span style="color:var(--danger); font-size:0.85rem;">⏰ انتهى الوقت!</span></div>';
+      els.forEach(el => {
+        el.innerHTML = '<div class="countdown-bar" style="justify-content:center;"><span style="color:var(--danger); font-size:0.85rem;">⏰ انتهى الوقت!</span></div>';
+      });
       clearInterval(countdownInterval);
       return;
     }
@@ -116,7 +117,9 @@ function startLiveCountdown(endDateStr) {
       h = Math.floor((diff % 86400000) / 3600000),
       m = Math.floor((diff % 3600000) / 60000),
       s = Math.floor((diff % 60000) / 1000);
-    el.innerHTML = `<div class="countdown-bar"><span style="font-size:0.8rem; color:var(--text-muted);">⏳ الوقت المتبقي</span><span class="countdown-val">${ar(d)} يوم ${ar(h)} ساعة ${ar(m)} دقيقة ${ar(s)} ثانية</span></div>`;
+    
+    const html = `<div class="countdown-bar"><span style="font-size:0.8rem; color:var(--text-muted);">⏳ ${customLabel}</span><span class="countdown-val">${ar(d)} ي و ${ar(h)} س ${ar(m)} د ${ar(s)} ث</span></div>`;
+    els.forEach(el => el.innerHTML = html);
   }
   update();
   countdownInterval = setInterval(update, 1000);
