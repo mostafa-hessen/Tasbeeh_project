@@ -444,10 +444,10 @@
             <textarea id="nc-checklist" class="input-field" style="height:120px; resize:vertical; display:none;" placeholder="قائمة المهام (كل مهمة في سطر)&#10;اليوم الأول&#10;اليوم الثاني"></textarea>
 
             <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; display:block;">الفئة المستهدفة:</label>
-            <select id="nc-target-gender" class="input-field" style="background: #1a1a2e;" onchange="filterUserCheckboxes()">
-              <option value="male">الرجال فقط ♂️</option>
-              <option value="female">النساء فقط ♀️</option>
-              <option value="both" selected>الجميع (للإدارة فقط) 👥</option>
+            <select id="nc-target-gender" onchange="filterUserCheckboxes()" style="width: 100%; padding: 12px; border-radius: 12px; background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 20px;">
+              <option value="male">للرجال فقط ♂️</option>
+              <option value="female">للنساء فقط ♀️</option>
+              <option value="both">للجميع (رجال ونساء) 🌍</option>
             </select>
 
             <div style="margin-bottom: 20px">
@@ -477,6 +477,19 @@
               إضافة مستخدم جديد ✨
             </button>
           </div>
+          
+          <!-- Gender Filter for User List -->
+          <div class="card-master" style="padding: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.03);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">عرض:</span>
+              <select id="admin-user-filter" class="input-field" style="margin-bottom: 0; padding: 5px 10px; font-size: 0.85rem;" onchange="syncAdmin()">
+                <option value="all">الجميع 👥</option>
+                <option value="male">الذكور فقط ♂️</option>
+                <option value="female">الإناث فقط ♀️</option>
+              </select>
+            </div>
+          </div>
+
           <div id="admin-user-list-ui"></div>
         </div>
 

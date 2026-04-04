@@ -117,15 +117,17 @@ function syncDash() {
   const activeChallenges = state.challenges.filter((c) => {
     const isParticipant = c.participants?.includes(state.currentUser.id);
     const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
-    const canSee = (isParticipant || hasProgress) && c.is_active;
+    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
+    const canSee = (isParticipant || hasProgress || genderMatch) && c.is_active;
     const hasStarted = !c.start_date || new Date(c.start_date) <= now;
     return canSee && hasStarted;
   });
 
   const upcomingChallenges = state.challenges.filter((c) => {
     const isParticipant = c.participants?.includes(state.currentUser.id);
+    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
     const isFuture = c.start_date && new Date(c.start_date) > now;
-    return isParticipant && c.is_active && isFuture;
+    return (isParticipant || genderMatch) && c.is_active && isFuture;
   });
 
   const userChallenges = [...activeChallenges, ...upcomingChallenges];
@@ -155,14 +157,13 @@ function syncDash() {
 
   // Active Challenge Hero Card
   const cur = state.challenges.find(
-    (x) =>
-      x.id === state.currentChallengeId &&
-      ((x.participants &&
-        Array.isArray(x.participants) &&
-        x.participants.includes(state.currentUser.id)) ||
-        state.currentUser.is_admin ||
-        (state.progress &&
-          state.progress[`${state.currentUser.id}_${x.id}`] > 0))
+    (x) => {
+      if (x.id !== state.currentChallengeId) return false;
+      const isParticipant = x.participants?.includes(state.currentUser.id);
+      const hasProgress = state.progress[`${state.currentUser.id}_${x.id}`] > 0;
+      const genderMatch = x.target_gender === 'both' || x.target_gender === state.currentUser.gender;
+      return (isParticipant || hasProgress || genderMatch || state.currentUser.is_admin);
+    }
   );
 
   let activeChal =
@@ -390,11 +391,16 @@ function syncDash() {
 function renderRanks(chal) {
   const filteredUsers = state.users.filter(
     (u) => {
-      const isParticipant = chal.participants?.includes(u.id);
+      const isHandpicked = chal.participants?.includes(u.id);
+      const genderMatch = chal.target_gender === 'both' || chal.target_gender === u.gender;
+      const hasScore = (state.progress[`${u.id}_${chal.id}`] || 0) > 0;
+      
+      const isParticipant = isHandpicked || genderMatch || hasScore;
       const isMe = u.id === state.currentUser.id;
       if (!isParticipant && !isMe) return false;
 
-      // Admin sees everyone. Others only see their own gender OR admins.
+      // Admin sees everyone and their progress. 
+      // Others only see people matching THEIR gender OR admins.
       if (state.currentUser.is_admin) return true;
       return u.is_admin || u.gender === state.currentUser.gender;
     }

@@ -35,14 +35,14 @@ document.addEventListener("change", (e) => {
 
 function filterUserCheckboxes() {
   const targetGenderEl = document.getElementById("nc-target-gender");
-  if (!targetGenderEl) return;
-  const targetGender = targetGenderEl.value;
+  // Default to 'both' if not found or empty
+  const targetGender = targetGenderEl ? (targetGenderEl.value || "both") : "both";
 
   const cbContainer = document.getElementById("admin-user-checkboxes");
   if (!cbContainer) return;
 
-  const users = state.users.filter(u => {
-    // Admin always appears in both
+  // Sync state.users to ensure we have the latest list
+  const users = (state.users || []).filter(u => {
     if (u.is_admin) return true;
     if (targetGender === "both") return true;
     return u.gender === targetGender;
@@ -104,42 +104,57 @@ function syncAdmin() {
       .join("");
   }
 
-  // User list
+  // User list management with filtering
   const ulArea = document.getElementById("admin-user-list-ui");
+  const filterVal = document.getElementById("admin-user-filter")?.value || "all";
+  
   if (ulArea) {
-    ulArea.innerHTML = state.users
+    let users = state.users;
+    if (filterVal !== "all") {
+      users = users.filter(u => u.gender === filterVal || u.is_admin);
+    }
+
+    ulArea.innerHTML = users
       .map(
-        (u, i) => `
-      <div class="ranking-row">
+        (u, i) => {
+          // Correct original index from state.users for editing
+          const originalIdx = state.users.findIndex(x => x.id === u.id);
+          return `
+      <div class="ranking-row" style="background: ${u.gender === 'female' ? 'rgba(255, 182, 193, 0.05)' : 'rgba(135, 206, 250, 0.05)'}">
           <div style="flex:1;">
-              <strong>${u.name}</strong> ${u.is_hidden ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>' : ""
-          }
-              <div style="font-size:0.6rem; color:var(--text-muted);">رصيد إجمالي: ${fmt(
-            getTotal(u.id)
-          )} | الماس: ${ar(u.gems || 0)}</div>
+              <strong>${u.name} ${u.gender === 'female' ? '♀️' : '♂️'}</strong> 
+              ${u.is_hidden ? '<span style="font-size:0.6rem; color:var(--diamond);">(مخفي)</span>' : ""}
+              ${u.is_admin ? '<span style="font-size:0.6rem; color:var(--primary-light);">(آدمن)</span>' : ""}
+              <div style="font-size:0.6rem; color:var(--text-muted);">رصيد إجمالي: ${fmt(getTotal(u.id))} | الماس: ${ar(u.gems || 0)}</div>
           </div>
           <div style="display:flex; gap:8px;">
-              <button onclick="viewUserBehavior('${u.id}')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">السلوك 🔍</button>
-              <button onclick="openEditUser(${i})" style="color:var(--primary-light); background:none; border:none; border-bottom:1px solid; font-size:0.7rem;">تعديل✏️</button>
-              <button onclick="deleteUser('${u.id}')" style="background:none; border:none; color:var(--danger); font-size:0.7rem;">حذف🗑️</button>
+              <button onclick="viewUserBehavior('${u.id}')" title="السلوك" style="background:none; border:none; color:var(--primary); font-size:1.1rem; cursor:pointer;">🔍</button>
+              <button onclick="openEditUser(${originalIdx})" title="تعديل" style="color:var(--primary-light); background:none; border:none; font-size:1.1rem; cursor:pointer;">✏️</button>
+              <button onclick="deleteUser('${u.id}')" title="حذف" style="background:none; border:none; color:var(--danger); font-size:1.1rem; cursor:pointer;">🗑️</button>
           </div>
-      </div>`
+      </div>`;
+        }
       )
       .join("");
   }
 }
 
 async function addChallenge() {
-  const t = document.getElementById("nc-title").value,
-    g = parseInt(document.getElementById("nc-goal").value);
-  const act = document.getElementById("nc-active").checked,
-    days = parseInt(document.getElementById("nc-days").value) || 0;
-  const phrase = document.getElementById("nc-phrase").value || "أستغفر الله";
-  const type = document.getElementById("nc-type").value || "count";
-  const target_gender = document.getElementById("nc-target-gender").value || "male";
-  const checklist_text = document.getElementById("nc-checklist").value || "";
+  const getVal = (id) => document.getElementById(id)?.value || "";
+  const getChecked = (id) => document.getElementById(id)?.checked || false;
+
+  const t = getVal("nc-title"),
+        g = parseInt(getVal("nc-goal"));
+  const act = getChecked("nc-active"),
+        days = parseInt(getVal("nc-days")) || 0;
+  const phrase = getVal("nc-phrase") || "أستغفر الله";
+  const type = getVal("nc-type") || "count";
+  const target_gender = getVal("nc-target-gender") || "male";
+  const checklist_text = getVal("nc-checklist") || "";
   const checklist_data = checklist_text.split(/\r?\n/).filter(line => line.trim() !== "").map((line, idx) => ({ id: idx + 1, text: line.trim() }));
-  const startDate = document.getElementById("nc-start").value ? new Date(document.getElementById("nc-start").value).toISOString() : new Date().toISOString();
+  
+  const startEl = document.getElementById("nc-start");
+  const startDate = startEl && startEl.value ? new Date(startEl.value).toISOString() : new Date().toISOString();
 
   const participants = Array.from(document.querySelectorAll(".nu-p:checked")).map(
     (cb) => cb.value
@@ -188,45 +203,101 @@ function editChallenge(id) {
   const c = state.challenges.find((x) => x.id === id);
   if (!c) return;
   editingChallengeId = id;
-  document.getElementById("nc-title").value = c.title;
-  document.getElementById("nc-goal").value = c.goal;
-  document.getElementById("nc-active").checked = c.is_active || false;
-  document.getElementById("nc-days").value = c.duration_days || "";
-  document.getElementById("nc-start").value = c.start_date ? c.start_date.slice(0, 16) : "";
-  document.getElementById("nc-phrase").value = c.phrase || "أستغفر الله";
-  document.getElementById("nc-type").value = c.type || "count";
-  document.getElementById("nc-target-gender").value = c.target_gender || "male";
-  document.getElementById("nc-checklist").value = (c.checklist_data || []).map(item => item.text).join("\n");
-  document.getElementById("nc-checklist").style.display = (c.type === "checklist" || c.type === "mixed") ? "block" : "none";
   
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+  };
+  const setChecked = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.checked = val;
+  };
+
+  setVal("nc-title", c.title);
+  setVal("nc-goal", c.goal);
+  setChecked("nc-active", c.is_active || false);
+  setVal("nc-days", c.duration_days || "");
+  
+  // FIX: Convert UTC from Database to Local Time for datetime-local input
+  if (c.start_date) {
+    const localDate = new Date(c.start_date);
+    const tzOffset = localDate.getTimezoneOffset() * 60000; // in ms
+    const localISOTime = new Date(localDate - tzOffset).toISOString().slice(0, 16);
+    setVal("nc-start", localISOTime);
+  } else {
+    setVal("nc-start", "");
+  }
+
+  setVal("nc-phrase", c.phrase || "أستغفر الله");
+  setVal("nc-type", c.type || "count");
+  setVal("nc-target-gender", c.target_gender || "male");
+  
+  const checklistEl = document.getElementById("nc-checklist");
+  if (checklistEl) {
+    checklistEl.value = (c.checklist_data || []).map(item => item.text).join("\n");
+    checklistEl.style.display = (c.type === "checklist" || c.type === "mixed") ? "block" : "none";
+  }
+  
+  // Re-generate checkboxes based on gender selection
   filterUserCheckboxes();
-  document
-    .querySelectorAll(".nu-p")
-    .forEach((cb) => (cb.checked = c.participants.includes(cb.value)));
-  document.getElementById("admin-chal-form-title").innerText = "تعديل التحدي ✏️";
-  document.getElementById("admin-chal-btn").innerText = "تحديث التحدي 💾";
-  document.getElementById("admin-chal-cancel").classList.remove("hidden");
-  document.getElementById("nc-title").focus();
+  
+  // FIX: Specifically check participants AFTER the checkboxes are generated
+  setTimeout(() => {
+    const cbs = document.querySelectorAll(".nu-p");
+    const participantsList = Array.isArray(c.participants) ? c.participants : [];
+    cbs.forEach((cb) => {
+      cb.checked = participantsList.includes(cb.value);
+    });
+  }, 10);
+  
+  const titleEl = document.getElementById("admin-chal-form-title");
+  if (titleEl) titleEl.innerText = "تعديل التحدي ✏️";
+  
+  const btnEl = document.getElementById("admin-chal-btn");
+  if (btnEl) btnEl.innerText = "تحديث التحدي 💾";
+  
+  const cancelEl = document.getElementById("admin-chal-cancel");
+  if (cancelEl) cancelEl.classList.remove("hidden");
+  
+  const titleInput = document.getElementById("nc-title");
+  if (titleInput) titleInput.focus();
 }
 
 function cancelEditChallenge() {
   editingChallengeId = null;
-  document.getElementById("nc-title").value = "";
-  document.getElementById("nc-goal").value = "";
-  document.getElementById("nc-days").value = "";
-  document.getElementById("nc-start").value = "";
+  const idsToClear = ["nc-title", "nc-goal", "nc-days", "nc-start", "nc-checklist"];
+  idsToClear.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = "";
+  });
+  
   document.querySelectorAll(".nu-p").forEach((cb) => (cb.checked = false));
-  document.getElementById("nc-phrase").value = "أستغفر الله";
-  document.getElementById("nc-type").value = "count";
-  document.getElementById("nc-target-gender").value = "male";
-  document.getElementById("nc-checklist").value = "";
-  document.getElementById("nc-checklist").style.display = "none";
-  document.getElementById("nc-active").checked = true;
+  
+  const phraseEl = document.getElementById("nc-phrase");
+  if (phraseEl) phraseEl.value = "أستغفر الله";
+  
+  const typeEl = document.getElementById("nc-type");
+  if (typeEl) typeEl.value = "count";
+  
+  const targetEl = document.getElementById("nc-target-gender");
+  if (targetEl) targetEl.value = "male";
+  
+  const checklistEl = document.getElementById("nc-checklist");
+  if (checklistEl) checklistEl.style.display = "none";
+  
+  const activeEl = document.getElementById("nc-active");
+  if (activeEl) activeEl.checked = true;
+  
   filterUserCheckboxes();
-  document.getElementById("admin-chal-form-title").innerText =
-    "بدء تحدي جديد 🏆";
-  document.getElementById("admin-chal-btn").innerText = "ابدأ التحدي 🔥";
-  document.getElementById("admin-chal-cancel").classList.add("hidden");
+  
+  const titleEl = document.getElementById("admin-chal-form-title");
+  if (titleEl) titleEl.innerText = "بدء تحدي جديد 🏆";
+  
+  const btnEl = document.getElementById("admin-chal-btn");
+  if (btnEl) btnEl.innerText = "ابدأ التحدي 🔥";
+  
+  const cancelEl = document.getElementById("admin-chal-cancel");
+  if (cancelEl) cancelEl.classList.add("hidden");
 }
 
 async function deleteChallenge(id) {
@@ -271,10 +342,17 @@ function openEditUser(idx) {
 }
 
 async function saveUserEdit() {
-  const name = document.getElementById("edit-u-name").value.trim();
-  const gems = parseInt(document.getElementById("edit-u-gems").value) || 0;
-  const gender = document.getElementById("edit-u-gender").value;
-  const isHidden = document.getElementById("edit-u-hidden").checked;
+  const nameEl = document.getElementById("edit-u-name");
+  const gemsEl = document.getElementById("edit-u-gems");
+  const genderEl = document.getElementById("edit-u-gender");
+  const hiddenEl = document.getElementById("edit-u-hidden");
+
+  if (!nameEl) return toast("عذراً، فشل العثور على المدخلات الأساسية ❌");
+
+  const name = nameEl.value.trim();
+  const gems = gemsEl ? (parseInt(gemsEl.value) || 0) : 0;
+  const gender = genderEl ? genderEl.value : "male";
+  const isHidden = hiddenEl ? hiddenEl.checked : false;
 
   if (!name) return toast("الاسم مطلوب ⚠️");
   toast("جاري حفظ التعديلات... ⏳");

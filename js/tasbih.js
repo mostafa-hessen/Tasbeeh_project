@@ -42,36 +42,44 @@ function syncTasbih() {
   const beadLbl = document.querySelector(".bead-core div:first-child");
   if (beadLbl) beadLbl.innerText = c && c.phrase ? c.phrase : "استغفر";
 
-  // Lock UI if challenge is inactive
-  const saveBtn = document.querySelector("button[onclick='saveW()']");
+  const now = new Date();
+  const isUpcoming = c && c.start_date && new Date(c.start_date) > now;
+
+  // Lock UI if challenge is inactive OR hasn't started yet
+  const saveWBtn = document.querySelector("button[onclick='saveW()']");
   const manualBtn = document.querySelector("button[onclick='openManualModal()']");
   const beadArea = document.querySelector(".bead-container-outer");
   const lockOverlay = document.getElementById("tasbih-lock-overlay");
 
-  if (c && !c.is_active && !state.currentUser.is_admin) {
-      if (saveBtn) {
-          saveBtn.disabled = true;
-          saveBtn.style.opacity = "0.5";
-          saveBtn.innerText = "التحدي مغلق 🚫";
+  if (c && !state.currentUser.is_admin && (!c.is_active || isUpcoming)) {
+      if (saveWBtn) {
+          saveWBtn.disabled = true;
+          saveWBtn.style.opacity = "0.5";
+          saveWBtn.innerText = isUpcoming ? "التحدي لم يبدأ بعد ⏳" : "التحدي مغلق 🚫";
       }
       if (manualBtn) manualBtn.style.display = "none";
       if (beadArea) beadArea.style.opacity = "0.2";
       if (lockOverlay) {
           lockOverlay.style.display = "flex";
+          const dateStr = isUpcoming ? new Date(c.start_date).toLocaleString("ar-EG") : "";
           lockOverlay.innerHTML = `
-            <div style="background:rgba(20,20,40,0.95); padding:30px; border-radius:30px; text-align:center; border:1px solid var(--danger); box-shadow:0 0 40px rgba(0,0,0,0.5);">
-                <div style="font-size:3rem; margin-bottom:15px;">🔒</div>
-                <h2 style="color:var(--danger); margin-bottom:10px;">تم إغلاق هذا التحدي</h2>
-                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">لا يمكن إضافة تسبيح جديد لهذا التحدي حالياً.</p>
-                <button onclick="go('s-dash')" class="btn-p" style="padding:10px 25px;">اختر تحدي آخر 🏆</button>
+            <div style="background:rgba(20,20,40,0.95); padding:30px; border-radius:30px; text-align:center; border:1px solid ${isUpcoming ? 'var(--primary)' : 'var(--danger)'}; box-shadow:0 0 40px rgba(0,0,0,0.5);">
+                <div style="font-size:3rem; margin-bottom:15px;">${isUpcoming ? "⏳" : "🔒"}</div>
+                <h2 style="color:${isUpcoming ? 'var(--primary-light)' : 'var(--danger)'}; margin-bottom:10px;">
+                    ${isUpcoming ? "استعد للبداية!" : "تم إغلاق هذا التحدي"}
+                </h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">
+                    ${isUpcoming ? `ينطلق التحدي يوم:<br><b>${dateStr}</b>` : "لا يمكن إضافة تسبيح جديد لهذا التحدي حالياً."}
+                </p>
+                <button onclick="go('s-dash')" class="btn-p" style="padding:10px 25px;">العودة للرئيسية 🏠</button>
             </div>
           `;
       }
   } else {
-      if (saveBtn) {
-          saveBtn.disabled = false;
-          saveBtn.style.opacity = "1";
-          saveBtn.innerText = "حفظ الرصيد الحالي ✅";
+      if (saveWBtn) {
+          saveWBtn.disabled = false;
+          saveWBtn.style.opacity = "1";
+          saveWBtn.innerText = "حفظ الرصيد الحالي ✅";
       }
       if (manualBtn) manualBtn.style.display = "block";
       if (beadArea) beadArea.style.opacity = "1";
@@ -113,8 +121,11 @@ function setG(v) {
 
 function tapSubha() {
   const c = state.challenges.find(x => x.id === state.currentChallengeId);
-  if (c && !c.is_active && !state.currentUser.is_admin) {
-      return toast("هذا التحدي تم إغلاقه ولا يمكن التسبيح فيه، يرجى تغيير التحدي 🚫");
+  const now = new Date();
+  const isUpcoming = c && c.start_date && new Date(c.start_date) > now;
+
+  if (c && !state.currentUser.is_admin && (!c.is_active || isUpcoming)) {
+      return toast(isUpcoming ? "التحدي لم يبدأ بعد، انتظر قليلاً! ⏳" : "هذا التحدي تم إغلاقه 🚫");
   }
   sessCount++;
   autoSaveSess();

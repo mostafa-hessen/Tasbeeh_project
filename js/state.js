@@ -243,7 +243,7 @@ async function syncPending() {
           .from("progress")
           .select("score")
           .eq("id", k)
-          .single();
+          .maybeSingle();
         const serverBase = currentSrv ? currentSrv.score : 0;
         const newTotal = serverBase + act.amount;
 
