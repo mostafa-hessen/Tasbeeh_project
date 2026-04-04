@@ -389,11 +389,15 @@ function syncDash() {
 
 function renderRanks(chal) {
   const filteredUsers = state.users.filter(
-    (u) =>
-      (chal.participants &&
-        Array.isArray(chal.participants) &&
-        chal.participants.includes(u.id)) ||
-      u.id === state.currentUser.id
+    (u) => {
+      const isParticipant = chal.participants?.includes(u.id);
+      const isMe = u.id === state.currentUser.id;
+      if (!isParticipant && !isMe) return false;
+
+      // Admin sees everyone. Others only see their own gender OR admins.
+      if (state.currentUser.is_admin) return true;
+      return u.is_admin || u.gender === state.currentUser.gender;
+    }
   );
 
   const list = filteredUsers
@@ -627,7 +631,13 @@ function syncHonor() {
 
   // 2. Original Honor Board Logic (Global Rankings)
   const sorted = state.users
-    .filter((u) => !u.is_hidden)
+    .filter((u) => {
+      if (u.is_hidden) return false;
+      // Admin sees everyone
+      if (state.currentUser.is_admin) return true;
+      // Users only see their own gender OR admins
+      return u.is_admin || u.gender === state.currentUser.gender;
+    })
     .map((u) => ({ ...u, score: getTotal(u.id) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, 10);

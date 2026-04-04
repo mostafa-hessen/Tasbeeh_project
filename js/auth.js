@@ -57,6 +57,9 @@ function toggleAuthMode() {
     .getElementById("signup-name")
     .classList.toggle("hidden", !isSignupMode);
   document
+    .getElementById("signup-gender")
+    .classList.toggle("hidden", !isSignupMode);
+  document
     .getElementById("btn-login-action")
     .classList.toggle("hidden", isSignupMode);
   document
@@ -72,10 +75,11 @@ function toggleAuthMode() {
 
 async function handleSignup() {
   const name = document.getElementById("signup-name").value.trim();
+  const gender = document.getElementById("signup-gender").value;
   const email = document.getElementById("login-id").value.trim();
   const password = document.getElementById("login-pass").value.trim();
 
-  if (!name || !email || !password) return toast("يرجى ملء جميع الخانات");
+  if (!name || !gender || !email || !password) return toast("يرجى ملء جميع الخانات واختيار الجنس ⚠️");
 
   const btn = document.getElementById("btn-signup-action");
   const originalText = btn.innerText;
@@ -88,7 +92,7 @@ async function handleSignup() {
       email,
       password,
       options: {
-        data: { name: name },
+        data: { name: name, gender: gender },
       },
     });
 

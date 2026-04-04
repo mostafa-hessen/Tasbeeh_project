@@ -33,16 +33,31 @@ document.addEventListener("change", (e) => {
   }
 });
 
+function filterUserCheckboxes() {
+  const targetGender = document.getElementById("nc-target-gender").value;
+  const cbContainer = document.getElementById("admin-user-checkboxes");
+  if (!cbContainer) return;
+
+  const users = state.users.filter(u => {
+    // Admin always appears in both
+    if (u.is_admin) return true;
+    if (targetGender === "both") return true;
+    return u.gender === targetGender;
+  });
+
+  cbContainer.innerHTML = users
+    .map(
+      (u) =>
+        `<label style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><input type="checkbox" value="${u.id}" class="nu-p"> ${u.name} ${u.gender === 'female' ? '♀️' : '♂️'}</label>`
+    )
+    .join("");
+}
+
 function syncAdmin() {
   const cb = document.getElementById("admin-user-checkboxes");
   if (!cb) return;
 
-  cb.innerHTML = state.users
-    .map(
-      (u) =>
-        `<label style="display:flex; align-items:center; gap:8px; margin-bottom:5px;"><input type="checkbox" value="${u.id}" class="nu-p"> ${u.name}</label>`
-    )
-    .join("");
+  filterUserCheckboxes();
 
   // Badge list management
   const bl = document.getElementById("admin-badge-list-ui");
@@ -115,6 +130,7 @@ async function addChallenge() {
     days = parseInt(document.getElementById("nc-days").value) || 0;
   const phrase = document.getElementById("nc-phrase").value || "أستغفر الله";
   const type = document.getElementById("nc-type").value || "count";
+  const target_gender = document.getElementById("nc-target-gender").value || "male";
   const checklist_text = document.getElementById("nc-checklist").value || "";
   const checklist_data = checklist_text.split(/\r?\n/).filter(line => line.trim() !== "").map((line, idx) => ({ id: idx + 1, text: line.trim() }));
   const startDate = document.getElementById("nc-start").value ? new Date(document.getElementById("nc-start").value).toISOString() : new Date().toISOString();
@@ -138,6 +154,7 @@ async function addChallenge() {
     participants: participants,
     phrase: phrase,
     type: type,
+    target_gender: target_gender,
     checklist_data: checklist_data
   };
 
@@ -172,9 +189,11 @@ function editChallenge(id) {
   document.getElementById("nc-start").value = c.start_date ? c.start_date.slice(0, 16) : "";
   document.getElementById("nc-phrase").value = c.phrase || "أستغفر الله";
   document.getElementById("nc-type").value = c.type || "count";
+  document.getElementById("nc-target-gender").value = c.target_gender || "male";
   document.getElementById("nc-checklist").value = (c.checklist_data || []).map(item => item.text).join("\n");
   document.getElementById("nc-checklist").style.display = (c.type === "checklist" || c.type === "mixed") ? "block" : "none";
   
+  filterUserCheckboxes();
   document
     .querySelectorAll(".nu-p")
     .forEach((cb) => (cb.checked = c.participants.includes(cb.value)));
@@ -193,9 +212,11 @@ function cancelEditChallenge() {
   document.querySelectorAll(".nu-p").forEach((cb) => (cb.checked = false));
   document.getElementById("nc-phrase").value = "أستغفر الله";
   document.getElementById("nc-type").value = "count";
+  document.getElementById("nc-target-gender").value = "male";
   document.getElementById("nc-checklist").value = "";
   document.getElementById("nc-checklist").style.display = "none";
   document.getElementById("nc-active").checked = true;
+  filterUserCheckboxes();
   document.getElementById("admin-chal-form-title").innerText =
     "بدء تحدي جديد 🏆";
   document.getElementById("admin-chal-btn").innerText = "ابدأ التحدي 🔥";
@@ -221,6 +242,7 @@ function openEditUser(idx) {
   editingUserId = u.id;
   document.getElementById("edit-u-name").value = u.name;
   document.getElementById("edit-u-gems").value = u.gems || 0;
+  document.getElementById("edit-u-gender").value = u.gender || "male";
   const passField = document.getElementById("edit-u-pass");
   if (passField) passField.value = "********"; // placeholder
   document.getElementById("edit-u-hidden").checked = u.is_hidden || false;
@@ -245,6 +267,7 @@ function openEditUser(idx) {
 async function saveUserEdit() {
   const name = document.getElementById("edit-u-name").value.trim();
   const gems = parseInt(document.getElementById("edit-u-gems").value) || 0;
+  const gender = document.getElementById("edit-u-gender").value;
   const isHidden = document.getElementById("edit-u-hidden").checked;
 
   if (!name) return toast("الاسم مطلوب ⚠️");
@@ -252,7 +275,7 @@ async function saveUserEdit() {
 
   const { error: pErr } = await db
     .from("profiles")
-    .update({ name, gems, is_hidden: isHidden })
+    .update({ name, gems, gender, is_hidden: isHidden })
     .eq("id", editingUserId);
 
   if (pErr) return toast("خطأ في تحديث البيانات ❌");

@@ -51,6 +51,11 @@
             class="input-field hidden"
             placeholder="الاسم الكريم"
           />
+          <select id="signup-gender" class="input-field hidden" style="background: #1a1a2e; color: #fff;">
+            <option value="" disabled selected>اختر الجنس</option>
+            <option value="male">ذكر ♂️</option>
+            <option value="female">أنثى ♀️</option>
+          </select>
           <input
             type="email"
             id="login-id"
@@ -443,6 +448,13 @@
             
             <textarea id="nc-checklist" class="input-field" style="height:120px; resize:vertical; display:none;" placeholder="قائمة المهام (كل مهمة في سطر)&#10;اليوم الأول&#10;اليوم الثاني"></textarea>
 
+            <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 5px; display:block;">الفئة المستهدفة:</label>
+            <select id="nc-target-gender" class="input-field" style="background: #1a1a2e;" onchange="filterUserCheckboxes()">
+              <option value="male">الرجال فقط ♂️</option>
+              <option value="female">النساء فقط ♀️</option>
+              <option value="both" selected>الجميع (للإدارة فقط) 👥</option>
+            </select>
+
             <div style="margin-bottom: 20px">
               <label style="font-size: 0.8rem; color: var(--text-muted); display:block; margin-bottom:10px;">المشاركين:</label>
               <div id="admin-user-checkboxes" style="max-height: 140px; overflow-y: auto; background: rgba(0, 0, 0, 0.3); padding: 12px; border-radius: 16px; border:1px solid rgba(255,255,255,0.05);"></div>
@@ -638,6 +650,15 @@
             >الماس 💎</label
           >
           <input type="number" id="edit-u-gems" class="input-field" />
+        </div>
+        <div style="margin-top: 5px">
+          <label style="font-size: 0.75rem; color: var(--text-muted)"
+            >الجنس</label
+          >
+          <select id="edit-u-gender" class="input-field" style="background: #1a1a2e; color: #fff;">
+            <option value="male">ذكر ♂️</option>
+            <option value="female">أنثى ♀️</option>
+          </select>
         </div>
         <label
           style="

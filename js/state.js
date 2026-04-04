@@ -112,13 +112,13 @@ async function load() {
     }
 
     const isAdmin = myProfile?.is_admin || false;
-    const profileCols = isAdmin ? "*" : "id, name, avatar_url";
+    const profileCols = isAdmin ? "*" : "id, name, avatar_url, gender";
 
     const [u, c, p, b, settings, cp] = await Promise.all([
       db.from("profiles").select(profileCols),
       db
         .from("challenges")
-        .select("id, title, goal, is_active, participants, start_date, end_date, phrase, type, checklist_data, created_at"),
+        .select("id, title, goal, is_active, participants, start_date, end_date, phrase, type, checklist_data, created_at, target_gender"),
       db.from("progress").select("id, user_id, challenge_id, score"),
       db.from("badges").select("id, name, icon, target"),
       db.from("app_settings").select("key, value"),
