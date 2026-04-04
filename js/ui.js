@@ -576,12 +576,38 @@ function renderBadgesHTML(uid) {
 }
 
 function syncHonor() {
+  const isAdmin = state.currentUser?.is_admin || false;
+  const userGender = state.currentUser?.gender || 'male';
+  const filterEl = document.getElementById("honor-gender-filter");
+  const adminFilter = (isAdmin && filterEl) ? filterEl.value : userGender;
+
+  // Show/Hide admin filter
+  const adminFilterUI = document.getElementById("admin-honor-filter");
+  if (adminFilterUI) {
+      if (isAdmin) adminFilterUI.classList.remove('hidden');
+      else adminFilterUI.classList.add('hidden');
+  }
+
   // 1. Logic for the Previous Challenge Winner
   const prevWinnerArea = document.getElementById("previous-winner-ui");
   if (prevWinnerArea) {
-    // Find challenges that are not active, sorted by ID (which contains Date.now())
+    // Find challenges that are not active
     const inactiveChallenges = state.challenges
-      .filter((c) => !c.is_active)
+      .filter((c) => {
+          if (c.is_active) return false;
+          // Gender filter for Normal User: must match gender. 
+          // Admin filter: matches the dropdown.
+          if (isAdmin) {
+              if (adminFilter !== 'both' && c.target_gender !== adminFilter && c.target_gender !== 'both') return false;
+          } else {
+              if (c.target_gender !== 'both' && c.target_gender !== userGender) return false;
+              // User must be a participant OR had progress in it to see it in THEIR archive
+              const isParticipant = c.participants?.includes(state.currentUser.id);
+              const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
+              if (!isParticipant && !hasProgress) return false;
+          }
+          return true;
+      })
       .sort((a, b) => b.id.localeCompare(a.id));
 
     if (inactiveChallenges.length > 0) {
@@ -633,10 +659,13 @@ function syncHonor() {
   const sorted = state.users
     .filter((u) => {
       if (u.is_hidden) return false;
-      // Admin sees everyone
-      if (state.currentUser.is_admin) return true;
+      // Admin filter
+      if (isAdmin) {
+          if (adminFilter === 'both') return true;
+          return u.gender === adminFilter || u.is_admin;
+      }
       // Users only see their own gender OR admins
-      return u.is_admin || u.gender === state.currentUser.gender;
+      return u.is_admin || u.gender === userGender;
     })
     .map((u) => ({ ...u, score: getTotal(u.id) }))
     .sort((a, b) => b.score - a.score)
@@ -678,8 +707,20 @@ function syncHonor() {
   // 3. Challenge Archive logic
   const archiveArea = document.getElementById("challenge-archive-ui");
   if (archiveArea) {
+    // Reuse the same logic for inactiveChallenges as above
     const inactiveChallenges = state.challenges
-      .filter((c) => !c.is_active)
+      .filter((c) => {
+          if (c.is_active) return false;
+          if (isAdmin) {
+              if (adminFilter !== 'both' && c.target_gender !== adminFilter && c.target_gender !== 'both') return false;
+          } else {
+              if (c.target_gender !== 'both' && c.target_gender !== userGender) return false;
+              const isParticipant = c.participants?.includes(state.currentUser.id);
+              const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
+              if (!isParticipant && !hasProgress) return false;
+          }
+          return true;
+      })
       .sort((a, b) => b.id.localeCompare(a.id));
 
     if (inactiveChallenges.length > 0) {

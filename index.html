@@ -291,6 +291,16 @@
           مجلس الشرف 🏆
         </h2>
         
+        <!-- Admin Filter for Honor Board -->
+        <div id="admin-honor-filter" class="hidden" style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05);">
+            <span style="font-size: 0.75rem; color: var(--text-muted);">تصفية العرض:</span>
+            <select id="honor-gender-filter" class="input-field" style="margin-bottom: 0; padding: 5px 10px; font-size: 0.8rem; background: #1a1a2e;" onchange="syncHonor()">
+                <option value="both">الكل (رجال ونساء) 👥</option>
+                <option value="male">رجال فقط ♂️</option>
+                <option value="female">نساء فقط ♀️</option>
+            </select>
+        </div>
+        
         <!-- New: Previous Winner Section -->
         <div id="previous-winner-ui" style="margin-bottom: 30px;"></div>
 
