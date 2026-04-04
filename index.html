@@ -84,22 +84,7 @@
             إنشاء حساب ✨
           </button>
 
-          <div style="text-align: center; margin-top: 25px">
-            <button
-              onclick="toggleAuthMode()"
-              id="toggle-auth-text"
-              style="
-                background: none;
-                border: none;
-                color: var(--text-muted);
-                font-size: 0.85rem;
-                cursor: pointer;
-                text-decoration: underline;
-              "
-            >
-              ليس لديك حساب؟ سجل الآن
-            </button>
-          </div>
+          <!-- Signup toggle removed from here as requested -->
         </div>
       </section>
 
@@ -486,7 +471,12 @@
 
         <!-- Tab 2: Users -->
         <div id="atab-users" class="admin-tab-panel">
-          <h4 class="admin-section-title"><span>👥</span> إدارة المستخدمين</h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h4 class="admin-section-title" style="margin: 0;"><span>👥</span> إدارة المستخدمين</h4>
+            <button onclick="adminInitiateSignup()" class="btn-royal" style="padding: 8px 15px; font-size: 0.8rem; width: auto;">
+              إضافة مستخدم جديد ✨
+            </button>
+          </div>
           <div id="admin-user-list-ui"></div>
         </div>
 

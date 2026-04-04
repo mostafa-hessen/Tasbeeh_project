@@ -53,35 +53,53 @@ async function handleLogout() {
 let isSignupMode = false;
 function toggleAuthMode() {
   isSignupMode = !isSignupMode;
-  document
-    .getElementById("signup-name")
-    .classList.toggle("hidden", !isSignupMode);
-  document
-    .getElementById("signup-gender")
-    .classList.toggle("hidden", !isSignupMode);
-  document
-    .getElementById("btn-login-action")
-    .classList.toggle("hidden", isSignupMode);
-  document
-    .getElementById("btn-signup-action")
-    .classList.toggle("hidden", !isSignupMode);
-  document.getElementById("toggle-auth-text").innerText = isSignupMode
-    ? "لديك حساب بالفعل؟ سجل دخول"
-    : "ليس لديك حساب؟ سجل الآن";
+  
+  const elements = {
+    "signup-name": !isSignupMode,
+    "signup-gender": !isSignupMode,
+    "btn-login-action": isSignupMode,
+    "btn-signup-action": !isSignupMode
+  };
+
+  for (const [id, shouldHide] of Object.entries(elements)) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.toggle("hidden", shouldHide);
+    }
+  }
+
+  const toggleText = document.getElementById("toggle-auth-text");
+  if (toggleText) {
+    toggleText.innerText = isSignupMode
+      ? "لديك حساب بالفعل؟ سجل دخول"
+      : "ليس لديك حساب؟ سجل الآن";
+  }
 
   const passInput = document.getElementById("login-pass");
-  passInput.autocomplete = isSignupMode ? "new-password" : "current-password";
+  if (passInput) {
+    passInput.autocomplete = isSignupMode ? "new-password" : "current-password";
+  }
 }
 
 async function handleSignup() {
-  const name = document.getElementById("signup-name").value.trim();
-  const gender = document.getElementById("signup-gender").value;
-  const email = document.getElementById("login-id").value.trim();
-  const password = document.getElementById("login-pass").value.trim();
+  const nameEl = document.getElementById("signup-name");
+  const genderEl = document.getElementById("signup-gender");
+  const emailEl = document.getElementById("login-id");
+  const passEl = document.getElementById("login-pass");
+
+  if (!nameEl || !genderEl || !emailEl || !passEl) {
+    return toast("عذراً، فشل في الوصول لبعض البيانات. يرجى تحديث الصفحة 🔄");
+  }
+
+  const name = nameEl.value.trim();
+  const gender = genderEl.value;
+  const email = emailEl.value.trim();
+  const password = passEl.value.trim();
 
   if (!name || !gender || !email || !password) return toast("يرجى ملء جميع الخانات واختيار الجنس ⚠️");
 
   const btn = document.getElementById("btn-signup-action");
+  if (!btn) return;
   const originalText = btn.innerText;
 
   try {
@@ -112,4 +130,19 @@ async function handleSignup() {
     btn.innerText = originalText;
     btn.disabled = false;
   }
+}
+
+/**
+ * Special function for Admin to create a user:
+ * It logs out, goes to login screen, and toggles signup mode ON.
+ */
+function adminInitiateSignup() {
+  db.auth.signOut().then(() => {
+    // Navigate to login screen
+    if (typeof go === "function") go("s-login");
+    // Reset state and force signup mode
+    isSignupMode = false; 
+    toggleAuthMode();
+    alert("تم تسجيل خروج الإدارة. يمكنك الآن إدخال بيانات المستخدم الجديد لإنشاء حسابه.");
+  });
 }
