@@ -34,7 +34,10 @@ document.addEventListener("change", (e) => {
 });
 
 function filterUserCheckboxes() {
-  const targetGender = document.getElementById("nc-target-gender").value;
+  const targetGenderEl = document.getElementById("nc-target-gender");
+  if (!targetGenderEl) return;
+  const targetGender = targetGenderEl.value;
+
   const cbContainer = document.getElementById("admin-user-checkboxes");
   if (!cbContainer) return;
 
@@ -54,6 +57,9 @@ function filterUserCheckboxes() {
 }
 
 function syncAdmin() {
+  // Only sync if user is admin
+  if (!state.currentUser?.is_admin) return;
+
   const cb = document.getElementById("admin-user-checkboxes");
   if (!cb) return;
 
