@@ -115,19 +115,22 @@ function syncDash() {
   // Separate Active and Upcoming Challenges
   const now = new Date();
   const activeChallenges = state.challenges.filter((c) => {
-    const isParticipant = c.participants?.includes(state.currentUser.id);
+    const inList = c.participants?.includes(state.currentUser.id);
     const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
     const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
-    const canSee = (isParticipant || hasProgress || genderMatch) && c.is_active;
+    const isHandpicked = c.participants && c.participants.length > 0;
+    const canSee = isHandpicked ? (inList || hasProgress) : (genderMatch || hasProgress);
     const hasStarted = !c.start_date || new Date(c.start_date) <= now;
-    return canSee && hasStarted;
+    return canSee && c.is_active && hasStarted;
   });
 
   const upcomingChallenges = state.challenges.filter((c) => {
-    const isParticipant = c.participants?.includes(state.currentUser.id);
+    const inList = c.participants?.includes(state.currentUser.id);
     const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
+    const isHandpicked = c.participants && c.participants.length > 0;
+    const canSee = isHandpicked ? inList : genderMatch;
     const isFuture = c.start_date && new Date(c.start_date) > now;
-    return (isParticipant || genderMatch) && c.is_active && isFuture;
+    return canSee && c.is_active && isFuture;
   });
 
   const userChallenges = [...activeChallenges, ...upcomingChallenges];
@@ -159,10 +162,12 @@ function syncDash() {
   const cur = state.challenges.find(
     (x) => {
       if (x.id !== state.currentChallengeId) return false;
-      const isParticipant = x.participants?.includes(state.currentUser.id);
+      const inList = x.participants?.includes(state.currentUser.id);
       const hasProgress = state.progress[`${state.currentUser.id}_${x.id}`] > 0;
       const genderMatch = x.target_gender === 'both' || x.target_gender === state.currentUser.gender;
-      return (isParticipant || hasProgress || genderMatch || state.currentUser.is_admin);
+      const isHandpicked = x.participants && x.participants.length > 0;
+      const canSee = isHandpicked ? (inList || hasProgress) : (genderMatch || hasProgress);
+      return (canSee || state.currentUser.is_admin);
     }
   );
 
@@ -391,11 +396,12 @@ function syncDash() {
 function renderRanks(chal) {
   const filteredUsers = state.users.filter(
     (u) => {
-      const isHandpicked = chal.participants?.includes(u.id);
+      const inList = chal.participants?.includes(u.id);
       const genderMatch = chal.target_gender === 'both' || chal.target_gender === u.gender;
       const hasScore = (state.progress[`${u.id}_${chal.id}`] || 0) > 0;
+      const isHandpicked = chal.participants && chal.participants.length > 0;
       
-      const isParticipant = isHandpicked || genderMatch || hasScore;
+      const isParticipant = isHandpicked ? (inList || hasScore) : (genderMatch || hasScore);
       const isMe = u.id === state.currentUser.id;
       if (!isParticipant && !isMe) return false;
 
@@ -606,11 +612,12 @@ function syncHonor() {
           if (isAdmin) {
               if (adminFilter !== 'both' && c.target_gender !== adminFilter && c.target_gender !== 'both') return false;
           } else {
-              if (c.target_gender !== 'both' && c.target_gender !== userGender) return false;
-              // User must be a participant OR had progress in it to see it in THEIR archive
-              const isParticipant = c.participants?.includes(state.currentUser.id);
+              const inList = c.participants?.includes(state.currentUser.id);
               const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
-              if (!isParticipant && !hasProgress) return false;
+              const genderMatch = c.target_gender === 'both' || c.target_gender === userGender;
+              const isHandpicked = c.participants && c.participants.length > 0;
+              const canSee = isHandpicked ? (inList || hasProgress) : (genderMatch || hasProgress);
+              if (!canSee) return false;
           }
           return true;
       })
@@ -720,10 +727,12 @@ function syncHonor() {
           if (isAdmin) {
               if (adminFilter !== 'both' && c.target_gender !== adminFilter && c.target_gender !== 'both') return false;
           } else {
-              if (c.target_gender !== 'both' && c.target_gender !== userGender) return false;
-              const isParticipant = c.participants?.includes(state.currentUser.id);
+              const inList = c.participants?.includes(state.currentUser.id);
               const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
-              if (!isParticipant && !hasProgress) return false;
+              const genderMatch = c.target_gender === 'both' || c.target_gender === userGender;
+              const isHandpicked = c.participants && c.participants.length > 0;
+              const canSee = isHandpicked ? (inList || hasProgress) : (genderMatch || hasProgress);
+              if (!canSee) return false;
           }
           return true;
       })
