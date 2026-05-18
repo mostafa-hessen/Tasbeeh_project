@@ -116,3 +116,32 @@
 .ottoman-progress.completed {
   background: linear-gradient(90deg, #2d9e5f, #a0f5df);
 }
+
+/* Quran Page Styling */
+.quran-page {
+  background: linear-gradient(165deg, #0b131e 0%, #070b12 100%) !important; /* Dark theme consistent with app */
+  color: #f5dfa0 !important; /* Cream/Gold text */
+  border: 4px double #c9943a !important; /* Gold double border */
+  border-radius: 12px !important;
+  padding: 25px !important;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 20px rgba(201, 148, 58, 0.1) !important;
+  position: relative;
+  font-family: 'Scheherazade New', serif !important;
+  font-size: 1.8rem !important;
+  line-height: 2.5 !important;
+  text-align: justify;
+  text-align-last: center;
+}
+
+/* Frame ornaments */
+.quran-page::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border: 1px solid rgba(201, 148, 58, 0.3);
+  border-radius: 8px;
+  pointer-events: none;
+}

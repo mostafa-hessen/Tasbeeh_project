@@ -1,10 +1,11 @@
-const CACHE_NAME = 'mil-v7'; // Bumped version
+const CACHE_NAME = 'mil-v12'; // Bumped version
 const ASSETS = [
     './',
     './index.html',
     './manifest.json',
     './app_icon_1774282580592.png',
     './css/ottoman.css',
+    './js/quran.js',
     'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
     'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&family=Scheherazade+New:wght@400;700&family=Tajawal:wght@300;400;500;700&display=swap'
 ];
