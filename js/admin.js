@@ -97,6 +97,8 @@ function syncAdmin() {
           </div>
           <button onclick="editChallenge('${c.id
           }')" style="background:none; border:none; color:var(--primary); font-size:0.7rem; border-bottom:1px solid;">تعديل✏️</button>
+          <button onclick="cloneChallenge('${c.id
+          }')" style="background:none; border:none; color:var(--accent); font-size:0.7rem; border-bottom:1px solid; margin-right:8px;">استنساخ 👯‍♂️</button>
           <button onclick="deleteChallenge('${c.id
           }')" style="background:none; border:none; color:var(--danger); font-size:0.7rem; margin-right:8px;">حذف🗑️</button>
       </div>`
@@ -151,7 +153,18 @@ async function addChallenge() {
   const type = getVal("nc-type") || "count";
   const target_gender = getVal("nc-target-gender") || "male";
   const checklist_text = getVal("nc-checklist") || "";
-  const checklist_data = checklist_text.split(/\r?\n/).filter(line => line.trim() !== "").map((line, idx) => ({ id: idx + 1, text: line.trim() }));
+  const lines = checklist_text.split(/\r?\n/);
+  const checklist_data = [];
+  let currentDay = 1;
+  
+  lines.forEach((line) => {
+    const trimmed = line.trim();
+    if (trimmed === "---") {
+      currentDay++;
+    } else if (trimmed !== "") {
+      checklist_data.push({ id: checklist_data.length + 1, text: trimmed, day: currentDay });
+    }
+  });
   
   const startEl = document.getElementById("nc-start");
   const startDate = startEl && startEl.value ? new Date(startEl.value).toISOString() : new Date().toISOString();
@@ -234,7 +247,19 @@ function editChallenge(id) {
   
   const checklistEl = document.getElementById("nc-checklist");
   if (checklistEl) {
-    checklistEl.value = (c.checklist_data || []).map(item => item.text).join("\n");
+    const grouped = {};
+    (c.checklist_data || []).forEach(item => {
+        const day = item.day || 1;
+        if (!grouped[day]) grouped[day] = [];
+        grouped[day].push(item.text);
+    });
+    const lines = [];
+    Object.keys(grouped).forEach(day => {
+        lines.push(...grouped[day]);
+        lines.push("---");
+    });
+    if (lines.length > 0) lines.pop(); // Remove last "---"
+    checklistEl.value = lines.join("\n");
     checklistEl.style.display = (c.type === "checklist" || c.type === "mixed") ? "block" : "none";
   }
   
@@ -261,6 +286,23 @@ function editChallenge(id) {
   
   const titleInput = document.getElementById("nc-title");
   if (titleInput) titleInput.focus();
+}
+
+function cloneChallenge(id) {
+  editChallenge(id);
+  editingChallengeId = null;
+  
+  const titleEl = document.getElementById("nc-title");
+  if (titleEl) titleEl.value = titleEl.value + " (نسخة)";
+  
+  const titleHeader = document.getElementById("admin-chal-form-title");
+  if (titleHeader) titleHeader.innerText = "استنساخ تحدي 👯‍♂️";
+  
+  const btnEl = document.getElementById("admin-chal-btn");
+  if (btnEl) btnEl.innerText = "حفظ كـ تحدي جديد 💾";
+  
+  const cancelEl = document.getElementById("admin-chal-cancel");
+  if (cancelEl) cancelEl.classList.remove("hidden");
 }
 
 function cancelEditChallenge() {

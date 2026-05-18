@@ -117,7 +117,7 @@ function syncDash() {
   const activeChallenges = state.challenges.filter((c) => {
     const inList = c.participants?.includes(state.currentUser.id);
     const hasProgress = state.progress[`${state.currentUser.id}_${c.id}`] > 0;
-    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
+    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender || state.currentUser.is_admin;
     const isHandpicked = c.participants && c.participants.length > 0;
     const canSee = isHandpicked ? (inList || hasProgress) : (genderMatch || hasProgress);
     const hasStarted = !c.start_date || new Date(c.start_date) <= now;
@@ -126,7 +126,7 @@ function syncDash() {
 
   const upcomingChallenges = state.challenges.filter((c) => {
     const inList = c.participants?.includes(state.currentUser.id);
-    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender;
+    const genderMatch = c.target_gender === 'both' || c.target_gender === state.currentUser.gender || state.currentUser.is_admin;
     const isHandpicked = c.participants && c.participants.length > 0;
     const canSee = isHandpicked ? inList : genderMatch;
     const isFuture = c.start_date && new Date(c.start_date) > now;
@@ -208,6 +208,7 @@ function syncDash() {
         startLiveCountdown(activeChal.start_date, "يفتح خلال");
         return;
     }
+    
     let checklistHtml = '';
     if (showChecklist) {
        const startTs = new Date(activeChal.start_date || activeChal.created_at || Date.now()).getTime();
@@ -217,93 +218,87 @@ function syncDash() {
        const items = activeChal.checklist_data || [];
        const completedItems = state.checklistProgress.filter(p => p.challenge_id === activeChal.id && p.user_id === state.currentUser.id).map(p => p.item_id);
        
+       const groupedItems = {};
+       items.forEach((item, idx) => {
+         const day = item.day || (idx + 1);
+         if (!groupedItems[day]) groupedItems[day] = [];
+         groupedItems[day].push(item);
+       });
+
        checklistHtml = `<div id="checklist-container" style="margin-top:20px;">
-          <h5 style="color:var(--text-muted); font-size:0.75rem; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+          <h5 style="color:var(--text-muted); font-size:0.75rem; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
             <span>📋 المهام اليومية:</span>
             <span style="font-size:0.6rem; color:var(--accent);">تم إنجاز ${ar(completedItems.length)} من ${ar(items.length)}</span>
           </h5>
-          ${items.map((item, idx) => {
-            const itemDayTs = startTs + (idx * dayMs);
+          ${Object.keys(groupedItems).map((day) => {
+            const dayItems = groupedItems[day];
+            const dayCompleted = dayItems.filter(item => completedItems.includes(item.id)).length;
+            const dayPct = Math.min(100, (dayCompleted / dayItems.length) * 100).toFixed(0);
+            
+            const itemDayTs = startTs + ((day - 1) * dayMs);
             const itemDate = new Date(itemDayTs);
             itemDate.setHours(0,0,0,0);
             
             const isFuture = itemDate.getTime() > todayStart;
             const isToday = itemDate.getTime() === todayStart;
             const isPast = itemDate.getTime() < todayStart;
-            const isDone = completedItems.includes(item.id);
-            const isEnabled = isToday; // Only allow editing for the current day as per request
-            let statusLabel = '';
-            let indicatorColor = 'rgba(255,255,255,0.05)';
-            let statusIcon = '🔒';
-            if (isFuture) { 
-                statusLabel = 'قريباً (سيفتح ' + itemDate.toLocaleDateString("ar-EG", { weekday: 'long' }) + ')'; 
-                statusIcon = '🕒';
-            }
-            else if (isToday) { 
-                statusLabel = 'المهمة الحالية (متاحة الآن)'; 
-                indicatorColor = 'var(--primary)'; 
-                statusIcon = '✨';
-            }
-            else if (isPast && !isDone) { 
-                statusLabel = 'لم تكتمل المهمة'; 
-                indicatorColor = 'var(--danger)'; 
-                statusIcon = '❌';
-            }
-            else if (isDone) { 
-                statusLabel = 'تم الإنجاز بنجاح'; 
-                indicatorColor = 'var(--accent)'; 
-                statusIcon = '✅';
-            }
-
-            // Participants who done this item
-            const othersDone = state.checklistProgress.filter(cp => cp.challenge_id === activeChal.id && cp.item_id === item.id);
-            const othersAvatars = othersDone.slice(0, 3).map(p => {
-               const u = state.users.find(ux => ux.id === p.user_id);
-               return u ? `<div style="margin-left:-8px;">${getAvatarHTML(u, "24px")}</div>` : '';
-            }).join('');
-
-            let countdownHtml = '';
-            if (isFuture) {
-                const diff = itemDate.getTime() - Date.now();
-                if (diff < 86400000) { // If less than 24h
-                    const hours = Math.floor(diff / 3600000);
-                    const minutes = Math.floor((diff % 3600000) / 60000);
-                    countdownHtml = `<div style="font-size:0.55rem; color:var(--primary); margin-top:2px; font-weight:800;">فتحه خلال: ${ar(hours)}س و ${ar(minutes)}د</div>`;
-                }
-            } else if (isToday && !isDone) {
-                const tomorrow = new Date(todayStart + 86400000);
-                const diff = tomorrow.getTime() - Date.now();
-                const hours = Math.floor(diff / 3600000);
-                const minutes = Math.floor((diff % 3600000) / 60000);
-                countdownHtml = `<div style="font-size:0.55rem; color:var(--danger); margin-top:2px; font-weight:800; animation: pulse 2s infinite;">ينتهي خلال: ${ar(hours)}س و ${ar(minutes)}د ⏳</div>`;
-            }
-
+            
+            const isEnabled = isToday; // Only allow editing for the current day
+            
             return `
-                <div class="checklist-item ${isFuture ? 'locked' : ''} ${isDone ? 'done' : ''}" 
-                     style="display:flex; align-items:center; gap:12px; padding:18px; background:${isDone ? 'rgba(45,158,95,0.08)' : (isToday ? 'rgba(201,148,58,0.05)' : 'rgba(255,255,255,0.02)')}; border-radius:24px; margin-bottom:12px; border:1px solid ${isToday ? 'var(--primary)' : (isDone ? 'var(--accent)' : 'rgba(255,255,255,0.05)')}; transition:0.3s; position:relative;">
+              <div class="day-category" style="margin-bottom:20px; background:rgba(255,255,255,0.02); padding:15px; border-radius:20px; border:1px solid ${isToday ? 'var(--primary)' : 'rgba(255,255,255,0.05)'};">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                  <div>
+                    <span style="font-size:0.9rem; font-weight:800; color:var(--text);">اليوم ${ar(day)}</span>
+                    <span style="font-size:0.65rem; color:var(--text-muted); margin-right:5px;">(${itemDate.toLocaleDateString("ar-EG", { weekday: 'long' })})</span>
+                    ${isToday ? '<span style="font-size:0.6rem; color:var(--primary); font-weight:800; margin-right:5px;">[اليوم الحالي]</span>' : ''}
+                  </div>
+                  <span style="font-size:0.7rem; font-weight:700; color:${dayPct === '100' ? 'var(--accent)' : 'var(--primary-light)'};">${ar(dayPct)}%</span>
+                </div>
                 
-                <input type="checkbox" ${isDone ? 'checked' : ''} ${!isEnabled || !activeChal.is_active ? 'disabled' : ''} 
-                       onchange="toggleChecklistItem('${activeChal.id}', ${item.id}, this.checked)" 
-                       style="width:28px; height:28px; cursor:${isEnabled && activeChal.is_active ? 'pointer' : 'not-allowed'}; opacity:${isEnabled ? '1' : '0.3'}; z-index:2;">
-                
-                <div style="flex:1;">
-                    <div style="font-size:0.95rem; font-weight:700; color:${isFuture ? 'var(--text-dim)' : 'var(--text)'};">${item.text}</div>
-                    <div style="font-size:0.65rem; color: ${isPast && !isDone ? 'var(--danger)' : (isToday ? 'var(--primary-light)' : 'var(--text-dim)')}; margin-top:4px;">
-                        ${statusIcon} ${statusLabel}
-                    </div>
-                    ${countdownHtml}
+                <!-- Progress Bar for the Day -->
+                <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:3px; margin-bottom:15px; overflow:hidden;">
+                  <div style="width:${dayPct}%; height:100%; background:${dayPct === '100' ? 'var(--accent)' : 'var(--primary)'}; border-radius:3px; transition:0.3s;"></div>
                 </div>
 
-                ${othersDone.length > 0 ? `
-                <div onclick="openChecklistParticipants('${activeChal.id}', ${item.id})" style="display:flex; align-items:center; gap:8px; margin-right:auto; cursor:pointer; background:rgba(255,255,255,0.04); padding:6px 14px; border-radius:20px; border:1px solid rgba(255,255,255,0.06); box-shadow:0 4px 12px rgba(0,0,0,0.2);">
-                    <div style="display:flex; align-items:center;">${othersAvatars}</div>
-                    <div style="display:flex; flex-direction:column; align-items:center; line-height:1;">
-                       <span style="font-size:0.9rem; font-weight:900; color:var(--primary-light);">${ar(othersDone.length)}</span>
-                       <span style="font-size:0.5rem; color:var(--text-dim); text-transform:uppercase;">أتمّوا</span>
-                    </div>
+                <!-- Tasks Grid/Flex -->
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                  ${dayItems.map((item) => {
+                    const isDone = completedItems.includes(item.id);
+                    
+                    const othersDone = state.checklistProgress.filter(cp => cp.challenge_id === activeChal.id && cp.item_id === item.id);
+                    const othersAvatars = othersDone.slice(0, 3).map(p => {
+                       const u = state.users.find(ux => ux.id === p.user_id);
+                       return u ? `<div style="margin-left:-8px;">${getAvatarHTML(u, "20px")}</div>` : '';
+                    }).join('');
+
+                    return `
+                      <div class="checklist-item ${isFuture ? 'locked' : ''} ${isDone ? 'done' : ''}" 
+                           style="flex: 1 1 140px; display:flex; flex-direction:column; justify-content:space-between; gap:8px; padding:12px; background:${isDone ? 'rgba(45,158,95,0.08)' : (isToday ? 'rgba(201,148,58,0.05)' : 'rgba(255,255,255,0.02)')}; border-radius:16px; border:1px solid ${isToday ? 'var(--primary)' : (isDone ? 'var(--accent)' : 'rgba(255,255,255,0.05)')}; transition:0.3s; position:relative; min-height:80px; cursor:${isEnabled && activeChal.is_active ? 'pointer' : 'not-allowed'};"
+                           onclick="if(!${isFuture} && ${isEnabled} && ${activeChal.is_active}) { const cb = this.querySelector('input[type=checkbox]'); cb.checked = !cb.checked; cb.dispatchEvent(new Event('change')); }">
+                        
+                        <div style="display:flex; align-items:flex-start; gap:8px;">
+                          <input type="checkbox" ${isDone ? 'checked' : ''} ${!isEnabled || !activeChal.is_active ? 'disabled' : ''} 
+                                 onchange="toggleChecklistItem('${activeChal.id}', ${item.id}, this.checked); event.stopPropagation();" 
+                                 onclick="event.stopPropagation();"
+                                 style="width:18px; height:18px; cursor:${isEnabled && activeChal.is_active ? 'pointer' : 'not-allowed'}; opacity:${isEnabled ? '1' : '0.3'}; z-index:2; flex-shrink:0;">
+                          
+                          <div style="font-size:0.85rem; font-weight:700; color:${isFuture ? 'var(--text-dim)' : 'var(--text)'}; word-break:break-word;">${item.text}</div>
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:auto;">
+                          ${othersDone.length > 0 ? `
+                            <div onclick="openChecklistParticipants('${activeChal.id}', ${item.id}); event.stopPropagation();" style="display:flex; align-items:center; gap:4px; cursor:pointer; background:rgba(255,255,255,0.04); padding:2px 8px; border-radius:12px; border:1px solid rgba(255,255,255,0.06);">
+                              <div style="display:flex; align-items:center;">${othersAvatars}</div>
+                              <span style="font-size:0.6rem; color:var(--text-muted); font-weight:700;">+${ar(othersDone.length)}</span>
+                            </div>
+                          ` : '<div></div>'}
+                        </div>
+                      </div>
+                    `;
+                  }).join('')}
                 </div>
-                ` : ''}
-                </div>
+              </div>
             `;
           }).join('')}
        </div>`;
