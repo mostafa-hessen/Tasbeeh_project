@@ -67,31 +67,28 @@ function syncAzkar() {
     const isCompleted = count >= item.repeat;
     
     return `
-      <div class="card-master azkar-card ${isCompleted ? 'completed' : ''}" 
-           style="padding: 20px; margin-bottom: 15px; cursor: pointer; transition: 0.3s; position: relative; overflow: hidden;"
+      <div class="ottoman-card ${isCompleted ? 'completed' : ''}" 
+           style="padding: 25px 20px; margin-bottom: 15px; cursor: pointer;"
            onclick="tapAzkar('${item.id}', this)">
         
-        <div class="azkar-content" style="font-family: 'Scheherazade New', serif; font-size: 1.3rem; line-height: 1.8; color: var(--text); text-align: right; margin-bottom: 15px;">
+        <div class="ornament-right">❈</div>
+        
+        <div class="ottoman-text">
           ${item.text}
         </div>
         
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px; position: relative; z-index: 2;">
           <div style="font-size: 0.8rem; color: var(--text-muted);">
-            التكرار المطلوب: <span style="color: var(--primary-light); font-weight: bold;">${ar(item.repeat)}</span>
+            التكرار المطلوب: <span style="color: #c9943a; font-weight: bold;">${ar(item.repeat)}</span>
           </div>
           
-          <div class="azkar-badge" style="background: ${isCompleted ? 'var(--accent)' : 'var(--primary)'}; color: ${isCompleted ? 'black' : 'white'}; padding: 5px 15px; border-radius: 15px; font-size: 0.9rem; font-weight: bold; transition: 0.3s;">
+          <div class="azkar-badge" style="background: ${isCompleted ? '#2d9e5f' : '#c9943a'}; color: #000; padding: 5px 15px; border-radius: 12px; font-size: 0.9rem; font-weight: bold; transition: 0.3s;">
             ${ar(count)} / ${ar(item.repeat)}
           </div>
         </div>
         
-        <!-- Ripple effect or checkmark overlay -->
-        ${isCompleted ? `
-          <div style="position: absolute; top: 10px; left: 10px; font-size: 1.5rem; color: var(--accent);">✓</div>
-        ` : ''}
-        
-        <!-- Progress Bar Background -->
-        <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: var(--accent); width: ${(count / item.repeat) * 100}%; transition: 0.3s;"></div>
+        <!-- Progress Bar -->
+        <div class="ottoman-progress ${isCompleted ? 'completed' : ''}" style="width: ${(count / item.repeat) * 100}%;"></div>
       </div>
     `;
   }).join("");

@@ -1,0 +1,118 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   OTTOMAN DESIGN SYSTEM FOR AZKAR
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.ottoman-card {
+  background: linear-gradient(165deg, #0b131e 0%, #070b12 100%) !important;
+  border: 2px solid #c9943a !important;
+  border-radius: 20px 5px 20px 5px !important; /* Asymmetric corners for unique look */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(201, 148, 58, 0.1) !important;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+}
+
+.ottoman-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(201, 148, 58, 0.2), inset 0 0 25px rgba(201, 148, 58, 0.15) !important;
+}
+
+/* Inner border */
+.ottoman-card::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  border: 1px solid rgba(201, 148, 58, 0.3);
+  border-radius: 15px 3px 15px 3px;
+  pointer-events: none;
+}
+
+/* Corner Ornaments */
+.ottoman-card::after {
+  content: '❈';
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  color: #c9943a;
+  font-size: 1.2rem;
+  opacity: 0.6;
+}
+
+.ottoman-card .ornament-right {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  color: #c9943a;
+  font-size: 1.2rem;
+  opacity: 0.6;
+}
+
+.ottoman-card.completed {
+  border-color: #2d9e5f !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 25px rgba(45, 158, 95, 0.1) !important;
+}
+
+.ottoman-card.completed::before {
+  border-color: rgba(45, 158, 95, 0.3);
+}
+
+.ottoman-card.completed::after {
+  content: '✓' !important;
+  color: #2d9e5f;
+  font-size: 1.5rem;
+}
+
+.ottoman-card.completed .ornament-right {
+  color: #2d9e5f;
+}
+
+/* Typography */
+.ottoman-text {
+  font-family: 'Scheherazade New', serif !important;
+  font-size: 1.5rem !important;
+  line-height: 2 !important;
+  color: #f5dfa0 !important; /* Cream/Gold text */
+  text-align: center !important;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+  padding: 10px 20px;
+}
+
+/* Tabs */
+.azkar-tab-btn {
+  background: rgba(14, 14, 26, 0.8);
+  border: 1px solid rgba(201, 148, 58, 0.3);
+  color: var(--text-muted);
+  padding: 12px 24px;
+  border-radius: 15px 5px 15px 5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: 0.3s;
+  font-family: inherit;
+  flex: 1;
+  text-align: center;
+}
+
+.azkar-tab-btn.active {
+  background: linear-gradient(135deg, #c9943a, #6e4c1a);
+  color: #000;
+  border-color: #f5dfa0;
+  box-shadow: 0 5px 15px rgba(201, 148, 58, 0.4);
+  font-weight: 900;
+}
+
+/* Progress Bar */
+.ottoman-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #c9943a, #f5dfa0);
+  transition: width 0.5s ease;
+}
+
+.ottoman-progress.completed {
+  background: linear-gradient(90deg, #2d9e5f, #a0f5df);
+}
