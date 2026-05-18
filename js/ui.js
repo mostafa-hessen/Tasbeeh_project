@@ -29,6 +29,7 @@ function go(id) {
   if (id === "s-honor") syncHonor();
   if (id === "s-settings") syncProfile();
   if (id === "s-badges") syncBadges();
+  if (id === "s-azkar") syncAzkar();
   syncAdmin();
 }
 

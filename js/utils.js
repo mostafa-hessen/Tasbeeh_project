@@ -74,10 +74,9 @@ function toggleSound() {
 }
 
 // Particles effect
-function spawnParticles() {
-  const btn = document.querySelector(".bead-core");
-  if (!btn) return;
-  const rect = btn.getBoundingClientRect();
+function spawnParticles(targetEl = document.querySelector(".bead-core")) {
+  if (!targetEl) return;
+  const rect = targetEl.getBoundingClientRect();
   const cx = rect.left + rect.width / 2,
     cy = rect.top + rect.height / 2;
   for (let i = 0; i < 6; i++) {

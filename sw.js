@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mil-v3'; // Bumped version
+const CACHE_NAME = 'mil-v5'; // Bumped version
 const ASSETS = [
     './',
     './index.html',

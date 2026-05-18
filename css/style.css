@@ -455,7 +455,7 @@ BEAD CONTROL (AUTO RESET)
   border: none;
   background: none;
   font-family: inherit;
-  width: 25%;
+  flex: 1;
   transition: 0.3s;
 }
 .nav-tab.active {
